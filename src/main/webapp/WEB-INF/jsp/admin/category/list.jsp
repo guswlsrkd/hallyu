@@ -106,7 +106,7 @@
       </td>
     </tr>
   </table>
-  <div style="margin-top:8px">
+  <div style="margin-top:8px">   
     <button type="submit">${editing ? '수정' : '저장'}</button>
     <a href="<c:url value='/admin/category/list'/>">초기화</a>
   </div>
