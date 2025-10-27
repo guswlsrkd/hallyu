@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="spr.com.hallyu.category.mapper.CategoryMapper">
+
+  <!-- 최상위 메뉴 -->
+  <select id="findTopMenus" resultType="spr.com.hallyu.board.model.BoardCategory">
+    SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
+    FROM board_category
+    WHERE parent_code IS NULL AND use_yn='Y' AND visible=1
+    ORDER BY sort_order, name
+  </select>
+
+  <!-- 자식 메뉴 -->
+  <select id="findChildren" parameterType="string"
+          resultType="spr.com.hallyu.board.model.BoardCategory">
+    SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
+    FROM board_category
+    WHERE parent_code=#{parentCode} AND use_yn='Y' AND visible=1
+    ORDER BY sort_order, name
+  </select>
+
+</mapper>
