@@ -104,6 +104,57 @@
       <groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
     </dependency>
+    
+    <!-- Spring Security (4.2.x 라인) -->
+	<dependency>
+	  <groupId>org.springframework.security</groupId>
+	  <artifactId>spring-security-web</artifactId>
+	  <version>4.2.13.RELEASE</version>
+	</dependency>
+	<dependency>
+	  <groupId>org.springframework.security</groupId>
+	  <artifactId>spring-security-config</artifactId>
+	  <version>4.2.13.RELEASE</version>
+	</dependency>
+	
+	<!-- Legacy OAuth2 (Deprecated이지만 Spring 4.x에서 사용 가능) -->
+	<dependency>
+	  <groupId>org.springframework.security.oauth</groupId>
+	  <artifactId>spring-security-oauth2</artifactId>
+	  <version>2.5.2.RELEASE</version>
+	</dependency>
+	
+	<!-- RestTemplate/Json 파싱용(필요시) -->
+	<dependency>
+	  <groupId>org.apache.httpcomponents</groupId>
+	  <artifactId>httpclient</artifactId>
+	  <version>4.5.14</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.fasterxml.jackson.core</groupId>
+	  <artifactId>jackson-databind</artifactId>
+	  <version>2.13.5</version>
+	</dependency>
+	<dependency>
+    	<groupId>org.springframework.boot</groupId>
+    	<artifactId>spring-boot-autoconfigure</artifactId>
+    	<version>1.5.22.RELEASE</version>
+    </dependency>
+    
+    <dependency>
+	    <groupId>org.projectlombok</groupId>
+	    <artifactId>lombok</artifactId>
+	    <version>1.18.32</version>
+	    <scope>provided</scope>
+	</dependency>
+	
+	<dependency>
+	  <groupId>org.springframework.security</groupId>
+	  <artifactId>spring-security-taglibs</artifactId>
+	  <version>4.2.13.RELEASE</version>
+   </dependency>
+	
+	
   </dependencies>
 
   <build>
