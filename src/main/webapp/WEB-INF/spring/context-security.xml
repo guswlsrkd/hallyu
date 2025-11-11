@@ -40,7 +40,7 @@
 		<logout logout-url="/admin/logout" logout-success-url="/admin/login?logout" invalidate-session="true"/>
 
 		<!-- Custom filters for OAuth2 -->
-		<custom-filter ref="oauth2ClientContextFilter" before="EXCEPTION_TRANSLATION_FILTER"/>
+		<custom-filter ref="oauth2ClientContextFilter" after="SECURITY_CONTEXT_FILTER"/>
 		<custom-filter ref="googleSsoFilter" before="FILTER_SECURITY_INTERCEPTOR"/>
 
 		<headers><hsts disabled="true"/></headers>

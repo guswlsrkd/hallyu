@@ -16,15 +16,6 @@
     <filter-name>encodingFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
-  <!-- 이미 있는 springSecurityFilterChain 위에 두세요 -->
-  <filter>
-  	<filter-name>oauth2ClientContextFilter</filter-name>
-	<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-  </filter>
-  <filter-mapping>
-  <filter-name>oauth2ClientContextFilter</filter-name>
-  	<url-pattern>/*</url-pattern>
-  </filter-mapping>
   <!-- springSecurityFilterChain 연결 -->
   <filter>
   	<filter-name>springSecurityFilterChain</filter-name>
