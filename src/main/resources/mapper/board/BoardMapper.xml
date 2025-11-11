@@ -9,9 +9,9 @@
     <result property="title" column="title"/>
     <result property="content" column="content"/>
     <result property="writer" column="writer"/>
-    <result property="views" column="views"/>
+    <result property="viewCnt" column="view_cnt"/>
     <result property="isNotice" column="is_notice"/>
-    <result property="createdAt" column="created_at"/>
+    <result property="createdAt" column="created_at" />
     <result property="updatedAt" column="updated_at"/>
   </resultMap>
 
@@ -20,26 +20,26 @@
   </select>
 
   <select id="findPageByCode" resultMap="BoardMap">
-    SELECT id, code, title, content, writer, views, is_notice, created_at, updated_at
+    SELECT id, category_code, title, content, writer, view_cnt, is_notice, created_at, updated_at
     FROM board_post
     WHERE code = #{code}
     ORDER BY is_notice DESC, id DESC
     LIMIT #{limit} OFFSET #{offset}
   </select>
 
-  <select id="findOne" resultMap="BoardMap">
-    SELECT id, code, title, content, writer, views, is_notice, created_at, updated_at
+  <select id="findOne" parameterType="long" resultMap="BoardMap">
+    SELECT id, category_code, title, content, writer, view_cnt, is_notice, created_at, updated_at
     FROM board_post WHERE id = #{id}
   </select>
 
   <insert id="insertPost" parameterType="spr.com.hallyu.board.model.BoardPost" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO board_post (code, title, content, writer, is_notice)
-    VALUES (#{code}, #{title}, #{content}, #{writer}, #{isNotice})
+    INSERT INTO board_post (category_code, title, content, writer, is_notice, view_cnt, created_at)
+    VALUES (#{categoryCode}, #{title}, #{content}, #{writer}, false, 0, NOW())
   </insert>
 
   <update id="updatePost" parameterType="spr.com.hallyu.board.model.BoardPost">
     UPDATE board_post
-    SET title = #{title}, content = #{content}, writer = #{writer}, is_notice = #{isNotice}
+    SET title = #{title}, content = #{content}, updated_at = NOW()
     WHERE id = #{id}
   </update>
 
@@ -48,7 +48,50 @@
   </delete>
 
   <update id="increaseViews">
-    UPDATE board_post SET views = views + 1 WHERE id = #{id}
+    UPDATE board_post SET view_cnt = view_cnt + 1 WHERE id = #{id}
   </update>
+  
+  <!-- path 로 카테고리 조회 (사용자 라우터용) -->
+  <select id="findByPath" parameterType="string"
+          resultType="spr.com.hallyu.board.model.BoardCategory">
+    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible
+    FROM board_category
+    WHERE path = #{path}
+      AND use_yn = 'Y'
+      AND visible = 'Y'
+    LIMIT 1
+  </select>
+
+  <!-- code 로 카테고리 조회 (게시판 목록용) -->
+  <select id="findByCode" parameterType="string"
+          resultType="spr.com.hallyu.board.model.BoardCategory">
+    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth
+    FROM board_category
+    WHERE code = #{code}
+    LIMIT 1
+  </select>
+  
+  <!-- ✅ 게시글 목록 조회 -->
+  <select id="findPostsByCategory" parameterType="map"
+          resultType="spr.com.hallyu.board.model.BoardPost">
+    SELECT
+      id,
+      category_code,
+      title,
+      writer,
+      created_at,
+      view_cnt
+    FROM board_post
+    WHERE category_code = #{categoryCode}
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <!-- ✅ 게시글 개수 -->
+  <select id="countPostsByCategory" parameterType="string" resultType="int">
+    SELECT COUNT(*)
+    FROM board_post
+    WHERE category_code = #{categoryCode}
+  </select>
 
 </mapper>

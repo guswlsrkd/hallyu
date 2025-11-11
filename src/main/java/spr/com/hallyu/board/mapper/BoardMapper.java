@@ -3,6 +3,9 @@ package spr.com.hallyu.board.mapper;
 
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
+import java.util.Map;
+
+import spr.com.hallyu.board.model.BoardCategory;
 import spr.com.hallyu.board.model.BoardPost;
 
 public interface BoardMapper {
@@ -14,9 +17,15 @@ public interface BoardMapper {
 
   BoardPost findOne(@Param("id") Long id);
 
-  int insertPost(BoardPost p);
-  int updatePost(BoardPost p);
+  void insertPost(BoardPost post);
+  void updatePost(BoardPost post);
   int deletePost(@Param("id") Long id);
 
   int increaseViews(@Param("id") Long id);
+  
+  BoardCategory findByPath(@Param("path") String path);
+  BoardCategory findByCode(@Param("code") String code);
+  
+  List<BoardPost> findPostsByCategory(Map<String, Object> param);
+  int countPostsByCategory(String categoryCode);
 }

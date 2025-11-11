@@ -16,6 +16,22 @@
   <Logger name="org.apache.ibatis" level="DEBUG" additivity="false">
     <AppenderRef ref="Console"/>
   </Logger>
+  
+  <!-- log4jdbc: 파라미터 치환된 최종 SQL / 실행시간 -->
+  <Logger name="jdbc.sqlonly"  level="DEBUG" additivity="false">
+    <AppenderRef ref="Console"/>
+  </Logger>
+  <Logger name="jdbc.sqltiming" level="DEBUG" additivity="false">
+    <AppenderRef ref="Console"/>
+  </Logger>
+  
+  <Logger name="org.springframework.security" level="debug" additivity="false">
+        <AppenderRef ref="Console"/>
+  </Logger>
+
+    <Logger name="org.springframework.security.oauth2" level="debug" additivity="false">
+        <AppenderRef ref="Console"/>
+    </Logger>
     <!-- log4jdbc SQL -->
     <Logger name="jdbc.sqlonly" level="DEBUG" additivity="false">
     <AppenderRef ref="Console"/></Logger>

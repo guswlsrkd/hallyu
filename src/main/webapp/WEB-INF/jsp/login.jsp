@@ -7,4 +7,4 @@
   <input name="password" type="password" placeholder="PW">
   <button>로그인</button>
 </form>
-<a href="<c:url value='/admin/login/google'/>">구글로 로그인</a>
+<a href="<c:url value='/login/google'/>">구글 계정으로 로그인</a>

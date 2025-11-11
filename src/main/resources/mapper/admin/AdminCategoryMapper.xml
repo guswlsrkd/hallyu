@@ -1,72 +1,159 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="spr.com.hallyu.admin.mapper.AdminCategoryMapper">
 
-  <resultMap id="CategoryMap" type="spr.com.hallyu.board.model.BoardCategory">
-    <id property="code"        column="code"/>
-    <result property="name"        column="name"/>
-    <result property="path"        column="path"/>
-    <result property="sortOrder"   column="sort_order"/>
-    <result property="useYn"       column="use_yn"/>
-    <result property="visible"     column="visible"/>
-    <result property="parentCode"  column="parent_code"/>
-    <result property="depth"       column="depth"/>
-    <result property="createdAt"   column="created_at"/>
-    <result property="updatedAt"   column="updated_at"/>
-  </resultMap>
-
-  <select id="findAll" resultMap="CategoryMap">
-    SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
-    FROM board_category
-    ORDER BY COALESCE(parent_code,''), sort_order, name
-  </select>
-
-  <select id="findOne" parameterType="string" resultMap="CategoryMap">
-    SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
-    FROM board_category
-    WHERE code = #{code}
-  </select>
-
-  <select id="findChildren" parameterType="string" resultMap="CategoryMap">
-    SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
-    FROM board_category
-    WHERE parent_code = #{parentCode}
-    ORDER BY sort_order, name
-  </select>
-
-  <!-- ★ 문제되던 쿼리: CDATA로 감싸서 <=> 를 안전하게 -->
-  <select id="findMaxSortByParent" parameterType="string" resultType="int">
+<!-- 전체 카테고리 목록 (트리 평면 구조) -->
+  <select id="findTreeFlat" resultType="map">
     <![CDATA[
-    SELECT COALESCE(MAX(sort_order), 0)
-    FROM board_category
-    WHERE (parent_code <=> #{parentCode})
+      SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth
+      FROM board_category
+      ORDER BY COALESCE(parent_code, 'ROOT'), sort_order ASC, name ASC
     ]]>
   </select>
 
-  <insert id="insert" parameterType="spr.com.hallyu.board.model.BoardCategory">
-    INSERT INTO board_category(code,name,path,sort_order,use_yn,visible,parent_code,depth)
-    VALUES(#{code},#{name},#{path},#{sortOrder},#{useYn},#{visible},#{parentCode},#{depth})
+  <!-- 단건 조회 -->
+  <select id="findOne" parameterType="string" resultType="map">
+   <![CDATA[
+    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth,
+           created_at, updated_at
+    FROM board_category
+    WHERE code = #{code}
+     ]]>
+  </select>
+
+  <!-- 최상위 목록 -->
+  <select id="findTopList" resultType="map">
+   <![CDATA[
+    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible
+    FROM board_category
+    WHERE parent_code IS NULL
+    ORDER BY sort_order ASC, name ASC
+       ]]>
+  </select>
+
+  <!-- 자식 목록 -->
+  <select id="findChildren" parameterType="string" resultType="map">
+   <![CDATA[
+     SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible
+  FROM board_category
+  WHERE COALESCE(parent_code, 'ROOT') = COALESCE(#{parentCode}, 'ROOT')
+  ORDER BY sort_order ASC, name ASC
+     ]]>
+  </select>
+
+  <!-- 같은 부모 내 최대 sort_order -->
+  <select id="findMaxSortOrder" parameterType="string" resultType="int">
+  <![CDATA[
+    SELECT COALESCE(MAX(sort_order), 0)
+    FROM board_category
+    WHERE (parent_code IS NULL AND #{parentCode} IS NULL)
+       OR (parent_code = #{parentCode})
+     ]]>    
+  </select>
+
+  <!-- 생성 -->
+  <insert id="insert" parameterType="map">
+    <![CDATA[
+    INSERT INTO board_category (
+      code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth
+    )
+    VALUES
+      (#{code}, #{name}, #{path}, #{parentCode}, #{depth}, #{sortOrder}, COALESCE(#{useYn}, 'Y'), COALESCE(#{visible}, 'Y'), #{writeAuth})
+   ]]>         
   </insert>
 
-  <update id="update" parameterType="spr.com.hallyu.board.model.BoardCategory">
+  <!-- 수정 -->
+  <update id="update" parameterType="map">
+  <![CDATA[
     UPDATE board_category
-    SET name=#{name}, path=#{path}, sort_order=#{sortOrder},
-        use_yn=#{useYn}, visible=#{visible},
-        parent_code=#{parentCode}, depth=#{depth}
-    WHERE code=#{code}
+    SET name = #{name},
+        path = #{path},
+        use_yn = #{useYn},
+        visible = #{visible},
+        write_auth = #{writeAuth}
+    WHERE code = #{code}
+     ]]>        
+  </update>
+  
+  <!-- 부모 카테고리 깊이 -->
+<select id="findDepth" parameterType="string" resultType="int">
+  SELECT depth
+  FROM board_category
+  WHERE code = #{code}
+</select>
+
+<!-- 부모별 다음 정렬순서 -->
+<select id="nextSortOrder" parameterType="string" resultType="int">
+  SELECT COALESCE(MAX(sort_order), 0) + 1
+  FROM board_category
+  WHERE parent_code = #{parentCode}
+</select>
+
+<!-- 하위 카테고리 INSERT -->
+<insert id="insertChild" parameterType="map">
+  INSERT INTO board_category (
+    code, name, parent_code, depth, sort_order, use_yn, visible, path, write_auth, created_at, updated_at
+  )
+  VALUES
+    (#{code}, #{name}, #{parentCode}, #{depth}, #{sortOrder}, #{useYn}, #{visible}, #{path}, #{writeAuth}, NOW(), NOW())
+</insert>
+  
+
+  <!-- 표시 토글 -->
+  <update id="toggleVisible" parameterType="map">
+  <![CDATA[
+    UPDATE board_category
+    SET visible = #{visible}
+    WHERE code = #{code}
+    ]]>    
   </update>
 
+  <!-- 서로 순서 스왑 -->
+  <update id="swapSortOrder" parameterType="map">
+   <![CDATA[
+    UPDATE board_category
+    SET sort_order =
+      CASE code
+        WHEN #{codeA} THEN #{orderB}
+        WHEN #{codeB} THEN #{orderA}
+      END
+    WHERE code IN (#{codeA}, #{codeB});
+     ]]>    
+  </update>
+
+  <!-- 특정 부모 아래 지정 순서로 일괄 재정렬 -->
+  <update id="updateSortOrder" parameterType="map">
+   <![CDATA[
+    UPDATE board_category
+    SET sort_order = #{sortOrder}
+    WHERE code = #{code}
+    ]]>     
+  </update>
+
+  <!-- 삭제: 우선 단건만, 후손 삭제는 서비스에서 순서대로 처리 -->
   <delete id="delete" parameterType="string">
-    DELETE FROM board_category WHERE code=#{code}
+  <![CDATA[
+    DELETE FROM board_category
+    WHERE code = #{code}
+     ]]>
   </delete>
 
-  <update id="updateSort" parameterType="map">
-    UPDATE board_category SET sort_order = #{sortOrder} WHERE code = #{code}
-  </update>
-
-  <select id="countChildren" parameterType="string" resultType="int">
-    SELECT COUNT(*) FROM board_category WHERE parent_code = #{code}
+  <!-- 특정 부모의 모든 자식 코드들 (삭제/검증용) -->
+  <select id="findAllDescendants" parameterType="string" resultType="string">
+  <![CDATA[
+    /* MariaDB 10.2+ 재귀 CTE 가능하면 사용, 아니면 서비스에서 DFS */
+    WITH RECURSIVE cte AS (
+      SELECT code FROM board_category WHERE code = #{rootCode}
+      UNION ALL
+      SELECT bc.code
+      FROM board_category bc
+      JOIN cte ON bc.parent_code = cte.code
+    )
+    SELECT code FROM cte WHERE code <> #{rootCode};
+       ]]>
+    
   </select>
 
 </mapper>

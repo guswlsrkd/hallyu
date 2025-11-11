@@ -1,17 +1,21 @@
 package spr.com.hallyu.admin.service;
 
-import java.util.List;
+import java.util.*;
 import spr.com.hallyu.board.model.BoardCategory;
 
 public interface CategoryService {
-  List<BoardCategory> findAll();                // flat
-  List<BoardCategory> findTreeFlat();           // depth 순서로 플랫(들여쓰기용)
-  BoardCategory findOne(String code);
+    List<Map<String,Object>> findTreeFlat(); // depth 기준 플랫 트리
+    Map<String,Object> findOne(String code);
 
-  void create(BoardCategory c);                 // 새 항목(최대 sort+1)
-  void update(BoardCategory c);                 // 수정
-  void delete(String code);                     // 자식 있으면 예외
+    void create(Map<String,Object> dto);      // code, name, path, parentCode?
+    void update(Map<String,Object> dto);      // code, name, path, useYn, visible
+    void delete(String code);                 // 하위 먼저 삭제
 
-  void moveUp(String code);                     // 같은 부모 내 위로
-  void moveDown(String code);                   // 같은 부모 내 아래로
+    void moveUp(String code);
+    void moveDown(String code);
+
+    void toggleVisible(String code, String visibleYorN);
+    void createChild(Map<String,Object> dto);  // ← 이 줄 추가
+
+    void reorder(String parentCode, List<String> orderedCodes); // 같은 부모 내에서 순서 저장
 }

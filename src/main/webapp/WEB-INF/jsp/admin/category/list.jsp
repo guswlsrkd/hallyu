@@ -1,126 +1,440 @@
-<%@ page contentType="text/html; charset=UTF-8" %>
-<%@ taglib prefix="c"  uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<h1>카테고리 관리(계층형)</h1>
+<%
+  // 컨텍스트 경로
+  String ctx = request.getContextPath();
+%>
 
-<style>
-  table.cat { border-collapse: collapse; width: 100%; }
-  table.cat th, table.cat td { border:1px solid #ddd; padding:8px; }
-  .indent { display:inline-block; }
-  .actions form { display:inline; margin-right:4px; }
-  .muted { color:#999; }
-</style>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>카테고리 관리</title>
 
-<table class="cat">
-  <thead>
-    <tr>
-      <th style="width:220px">코드</th>
-      <th>이름</th>
-      <th>경로</th>
-      <th style="width:100px">부모</th>
-      <th style="width:70px">정렬</th>
-      <th style="width:70px">표시</th>
-      <th style="width:220px">작업</th>
-    </tr>
-  </thead>
-  <tbody>
-    <c:forEach var="it" items="${items}">
+  <!-- (선택) Spring Security CSRF 메타 태그: 컨트롤러에서 _csrf 를 노출하고 있으면 사용 -->
+  <c:if test="${not empty _csrf}">
+    <meta name="_csrf" content="${_csrf.token}"/>
+    <meta name="_csrf_header" content="${_csrf.headerName}"/>
+    <meta name="_csrf_param" content="${_csrf.parameterName}"/>
+  </c:if>
+
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.5; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f7f7f7; text-align: left; }
+    .muted { color: #888; font-size: 12px; }
+    .badge { display:inline-block; padding:2px 8px; border-radius: 10px; font-size: 12px; }
+    .badge.on  { background:#e6ffed; border:1px solid #b7f5c5; }
+    .badge.off { background:#ffecec; border:1px solid #ffb8b8; }
+    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+    button, .btn { cursor:pointer; padding:4px 8px; border:1px solid #ddd; background:#fff; border-radius:6px; }
+    button:hover, .btn:hover { background:#f2f2f2; }
+    .btn-up, .btn-down { width:32px; text-align:center; }
+  </style>
+</head>
+<body>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <h2>카테고리 관리</h2>
+    <a href="${pageContext.request.contextPath}/" class="btn" target="_blank" title="새 탭에서 열기">사용자 홈으로</a>
+  </div>
+  <p class="muted">표시 토글, 위/아래 정렬, 수정, 하위 등록 등의 기능을 사용할 수 있습니다.</p>
+
+  <table>
+    <thead>
       <tr>
+        <th style="width:18%">코드</th>
+        <th>이름</th>
+        <th style="width:16%">부모</th>
+        <th style="width:10%">깊이</th>
+        <th style="width:10%">정렬</th>
+        <th style="width:10%">표시</th>
+        <th style="width:26%">액션</th>
+      </tr>
+    </thead>
+    <tbody>
+    <c:forEach var="it" items="${categories}">
+      <tr data-code="${it.code}" data-parent="${it.parent_code}">
+  <td style="padding-left: ${(empty it.depth ? 0 : it.depth) * 20}px;">
+    <c:if test="${not empty it.depth and it.depth > 0}">
+      <span style="color: #888; font-size: 1.1em; vertical-align: middle;">ㄴ&nbsp;</span>
+    </c:if>
+    <code>${it.code}</code></td>
+  <td>
+    <c:out value="${it.name}"/>
+    <div class="muted"><c:out value="${it.path}"/></div>
+  </td>
+  <td><c:out value="${empty it.parent_code ? 'ROOT' : it.parent_code}"/></td>
+  <td>${empty it.depth ? 0 : it.depth}</td>
+  <td>${it.sort_order}</td>
         <td>
-          <span class="indent" style="padding-left:${it.depth * 20}px"></span>
-          ${it.code}
+          <c:choose>
+            <c:when test="${it.visible == 'Y'}"><span class="badge on">보임</span></c:when>
+            <c:otherwise><span class="badge off">숨김</span></c:otherwise>
+          </c:choose>
         </td>
-        <td>${it.name}</td>
-        <td class="muted">${it.path}</td>
-        <td>${it.parentCode}</td>
-        <td>${it.sortOrder}</td>
-        <td><c:out value="${it.visible ? 'Y' : 'N'}"/></td>
-        <td class="actions">
-          <!-- 위/아래 이동 -->
-          <form method="post" action="<c:url value='/admin/category/move-up'/>">
-            <input type="hidden" name="code" value="${it.code}"/><button>▲</button>
-          </form>
-          <form method="post" action="<c:url value='/admin/category/move-down'/>">
-            <input type="hidden" name="code" value="${it.code}"/><button>▼</button>
-          </form>
-          <!-- 하위 추가(아래 폼에 값 채워서 이동) -->
-          <form method="get" action="<c:url value='/admin/category/list'/>">
-            <input type="hidden" name="edit" value="${it.code}"/>
-            <button>하위추가</button>
-          </form>
-          <!-- 수정 폼으로 값 채움 -->
-          <form method="get" action="<c:url value='/admin/category/list'/>">
-            <input type="hidden" name="edit" value="${it.code}"/>
-            <button>편집</button>
-          </form>
-          <!-- 삭제 -->
-          <form method="post" action="<c:url value='/admin/category/delete'/>"
-                onsubmit="return confirm('삭제할까요? (자식 있으면 실패)');">
-            <input type="hidden" name="code" value="${it.code}"/>
-            <button>삭제</button>
-          </form>
+        <td>
+          <div class="row-actions">
+            <!-- 정렬: 위/아래 (POST) -->
+            <form method="post" action="${pageContext.request.contextPath}/admin/categories/${it.code}/moveUp" style="display:inline">
+              <input type="hidden" name="parentCode" value="${it.parent_code}" />
+              <button type="submit" class="btn btn-up" title="위로">▲</button>
+            </form>
+
+            <form method="post" action="${pageContext.request.contextPath}/admin/categories/${it.code}/moveDown" style="display:inline">
+              <input type="hidden" name="parentCode" value="${it.parent_code}" />
+              <button type="submit" class="btn btn-down" title="아래로">▼</button>
+            </form>
+
+            <!-- 표시 토글 (POST) -->
+            <form method="post" action="${pageContext.request.contextPath}/admin/categories/${it.code}/toggleVisible" style="display:inline">
+              <input type="hidden" name="visible" value="<c:out value='${it.visible == "Y" ? "N" : "Y"}'/>" />
+              <button type="submit" class="btn">
+                <c:out value='${it.visible == "Y" ? "숨기기" : "보이기"}'/>
+              </button>
+            </form>
+            
+            <!-- 수정 (GET) -->
+			<button type="button"
+        		    class="btn btn-edit"
+        			data-code="${it.code}"
+        			onclick="openEditModal('${it.code}')">
+  					수정
+			</button>
+			
+			<!-- 하위등록: 팝업 오픈 -->
+			<button type="button"
+        			class="btn btn-child"
+        			onclick="openChildModal('${it.code}', '${fn:escapeXml(it.name)}')">
+  					＋하위
+			</button>
+
+            <!-- 하위 메뉴에만 삭제 버튼 표시 -->
+            <c:if test="${not empty it.depth and it.depth > 0}">
+              <button type="button" class="btn" onclick="deleteCategory('${it.code}')">삭제</button>
+            </c:if>
+          </div>
         </td>
       </tr>
     </c:forEach>
-  </tbody>
-</table>
-
-<hr/>
-
-<h2>추가/수정</h2>
-<%
-  // editItem 이 있으면 편집 모드, 없으면 신규(상위추가 또는 루트추가)
-%>
-<c:set var="editing" value="${not empty editItem}"/>
-
-<form method="post" action="<c:url value='${editing ? "/admin/category/update" : "/admin/category/create"}'/>">
-  <table>
-    <tr>
-      <td>code</td>
-      <td>
-        <input name="code" value="${editing ? editItem.code : ''}" ${editing ? 'readonly' : ''} required/>
-      </td>
-      <td>name</td>
-      <td><input name="name" value="${editing ? editItem.name : ''}" required/></td>
-    </tr>
-    <tr>
-      <td>path</td>
-      <td><input name="path" value="${editing ? editItem.path : ''}" required style="width:300px"/></td>
-      <td>parent_code</td>
-      <td>
-        <input name="parentCode"
-               value="${editing ? editItem.parentCode : (param.edit != null ? param.edit : '')}"/>
-        <span class="muted">비우면 최상위</span>
-      </td>
-    </tr>
-    <tr>
-      <td>depth</td>
-      <td><input name="depth" value="${editing ? editItem.depth : (param.edit != null ? 1 : 0)}" style="width:60px"/></td>
-      <td>visible</td>
-      <td>
-        <label><input type="checkbox" name="visible" value="true"
-          <c:if test="${editing ? editItem.visible : true}">checked</c:if>/> 노출</label>
-        &nbsp; use_yn
-        <input name="useYn" value="${editing ? editItem.useYn : 'Y'}" style="width:40px"/>
-      </td>
-    </tr>
+    </tbody>
   </table>
-  <div style="margin-top:8px">   
-    <button type="submit">${editing ? '수정' : '저장'}</button>
-    <a href="<c:url value='/admin/category/list'/>">초기화</a>
-  </div>
-</form>
+  
+  <!-- ====== 수정 모달 ====== -->
+<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
+  <div style="width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; padding:18px 18px 10px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <h3 style="margin:0; font-size:18px;">카테고리 수정</h3>
+      <button type="button" onclick="closeEditModal()" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;">×</button>
+    </div>
 
-<!-- 루트 카테고리 바로 추가(선택) -->
-<h3>루트 카테고리 추가</h3>
-<form method="post" action="<c:url value='/admin/category/create'/>">
-  <input name="code" placeholder="code" required/>
-  <input name="name" placeholder="name" required/>
-  <input name="path" placeholder="/path" required/>
-  <input type="hidden" name="parentCode" value=""/>
-  <input type="hidden" name="depth" value="0"/>
-  <label><input type="checkbox" name="visible" value="true" checked/> 노출</label>
-  <input name="useYn" value="Y" style="width:40px"/>
-  <button>추가</button>
-</form>
+    <form id="editForm" onsubmit="return submitEdit(event)">
+      <input type="hidden" name="code" id="edit-code" />
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>코드</label>
+        <input type="text" id="edit-code-view" class="mono" readonly />
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>이름</label>
+        <input type="text" name="name" id="edit-name" required />
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>경로(Path)</label>
+        <input type="text" name="path" id="edit-path" placeholder="/k-food/intro" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>사용 여부</label>
+        <label><input type="radio" name="useYn" value="Y" checked /> 사용</label>
+        <label style="margin-left:8px;"><input type="radio" name="useYn" value="N" /> 미사용</label>
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+        <label>표시 여부</label>
+        <label><input type="radio" name="visible" value="Y" checked /> 표시</label>
+        <label style="margin-left:8px;"><input type="radio" name="visible" value="N" /> 비표시</label>
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+        <label for="edit-write-auth">글쓰기 권한</label>
+        <select name="writeAuth" id="edit-write-auth" style="padding: 4px;">
+          <option value="ROLE_USER">사용자 이상</option>
+          <option value="ROLE_ADMIN">관리자만</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button type="button" class="btn" onclick="closeEditModal()">취소</button>
+        <button type="submit" class="btn btn-primary">저장</button>
+      </div>
+    </form>
+
+    <div id="editAlert" style="display:none; margin-top:8px; color:#b91c1c;"></div>
+  </div>
+</div>
+<!-- ====== /수정 모달 ====== -->
+
+<!-- ====== 하위등록 모달 ====== -->
+<div id="childModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
+  <div style="width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <h3 style="margin:0; font-size:18px;">하위 카테고리 등록</h3>
+      <button type="button" onclick="closeChildModal()" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;">×</button>
+    </div>
+
+    <form id="childForm" onsubmit="return submitChild(event)">
+      <input type="hidden" id="child-parent-code" name="parentCode" />
+
+      <div style="margin:6px 0 12px; color:#6b7280;">
+        부모: <strong id="child-parent-name"></strong>
+        (<code class="mono" id="child-parent-code-view"></code>)
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>코드</label>
+        <input type="text" name="code" id="child-code" placeholder="예: intro" required />
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>이름</label>
+        <input type="text" name="name" id="child-name" required />
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>경로(Path)</label>
+        <input type="text" name="path" id="child-path" placeholder="/board/intro" />
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+        <label>사용 여부</label>
+        <label><input type="radio" name="useYn" value="Y" checked /> 사용</label>
+        <label style="margin-left:8px;"><input type="radio" name="useYn" value="N" /> 미사용</label>
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+        <label>표시 여부</label>
+        <label><input type="radio" name="visible" value="Y" checked /> 표시</label>
+        <label style="margin-left:8px;"><input type="radio" name="visible" value="N" /> 비표시</label>
+      </div>
+
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+        <label for="child-write-auth">글쓰기 권한</label>
+        <select name="writeAuth" id="child-write-auth" style="padding: 4px;">
+          <option value="ROLE_USER">사용자 이상</option>
+          <option value="ROLE_ADMIN">관리자만</option>
+        </select>
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button type="button" class="btn" onclick="closeChildModal()">취소</button>
+        <button type="submit" class="btn btn-primary">등록</button>
+      </div>
+    </form>
+
+    <div id="childAlert" style="display:none; margin-top:8px; color:#b91c1c;"></div>
+  </div>
+</div>
+<!-- ====== /하위등록 모달 ====== -->
+  
+
+<script>
+(function() {
+  // CSRF(있을 때만) 자동 부착: form submit 시 파라미터로 추가
+  var token = document.querySelector('meta[name="_csrf"]');
+  var param = document.querySelector('meta[name="_csrf_param"]');
+  if (token && param) {
+    var t = token.getAttribute('content');
+    var p = param.getAttribute('content');
+    Array.prototype.forEach.call(document.querySelectorAll('form[method="post"]'), function(f) {
+      if (!f.querySelector('input[name="'+p+'"]')) {
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = p;
+        hidden.value = t;
+        f.appendChild(hidden);
+      }
+    });
+  }
+
+  // 삭제 기능 (AJAX DELETE 요청)
+  window.deleteCategory = function(code) {
+    if (!confirm('정말 삭제하시겠습니까? 이 카테고리에 속한 모든 하위 카테고리와 게시글도 삭제됩니다.')) return;
+    
+    var headers = {};
+    var c = csrf();
+    if (c) headers[c.header] = c.token;
+
+    fetch(C + '/admin/categories/' + encodeURIComponent(code), {
+      method: 'DELETE',
+      headers: headers
+    })
+    .then(function(res){ if(!res.ok) { return res.json().then(err => { throw new Error(err.message || '삭제 실패'); }); } location.reload(); })
+    .catch(function(e){ alert('삭제 중 오류 발생: ' + e.message); });
+  };
+})();
+</script>
+
+<script>
+  // 컨텍스트 경로
+  var C = '${pageContext.request.contextPath}';
+
+  // (선택) Spring Security CSRF 메타태그 사용 시 자동 수집
+  function csrf() {
+    var h = document.querySelector('meta[name="_csrf_header"]');
+    var t = document.querySelector('meta[name="_csrf"]');
+    return (h && t) ? { header: h.getAttribute('content'), token: t.getAttribute('content') } : null;
+  }
+
+  // 모달 열기
+  async function openEditModal(code) {
+    // 초기화
+    document.getElementById('editAlert').style.display = 'none';
+    document.getElementById('editForm').reset();
+
+    // 단건 조회
+    const res = await fetch(C + '/admin/categories/' + encodeURIComponent(code), {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) {
+      alert('카테고리 정보를 불러오지 못했습니다. (' + res.status + ')');
+      return;
+    }
+    const data = await res.json();
+
+    // 폼 채우기 (필드명은 서비스 반환 키에 맞춰 조정)
+    document.getElementById('edit-code').value = data.code || code;
+    document.getElementById('edit-code-view').value = data.code || code;
+    document.getElementById('edit-name').value = data.name || '';
+    document.getElementById('edit-path').value = data.path || '';
+
+    // useYn 라디오
+    var useYn = (data.use_yn || 'Y');
+    document.querySelector('#editForm input[name="useYn"][value="' + (useYn === 'N' ? 'N' : 'Y') + '"]').checked = true;
+
+    // visible 라디오 (data.visible 이 Boolean일 수도, 'Y'/'N'일 수도 있음)
+    var visible = data.visible;
+    var visibleYn = (visible === true || visible === 'Y') ? 'Y' : 'N';
+    document.querySelector('#editForm input[name="visible"][value="' + visibleYn + '"]').checked = true;
+
+    // 글쓰기 권한 select 채우기
+    document.getElementById('edit-write-auth').value = data.write_auth || 'ROLE_USER';
+
+    // 모달 표시
+    document.getElementById('editModal').style.display = 'block';
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  // 저장(ajax PUT)
+  async function submitEdit(ev) {
+    ev.preventDefault();
+    const form = document.getElementById('editForm');
+    const code = document.getElementById('edit-code').value;
+
+    // 폼 데이터 → x-www-form-urlencoded 로 전송 (컨트롤러 @RequestParam과 매칭)
+    const fd = new URLSearchParams(new FormData(form));
+
+    const headers = { 'Accept': 'application/json', 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
+    const c = csrf();
+    if (c) headers[c.header] = c.token;
+
+    try {
+      const res = await fetch(C + '/admin/categories/' + encodeURIComponent(code), {
+        method: 'PUT',
+        headers,
+        body: fd.toString()
+      });
+      if (!res.ok) {
+        const msg = '저장 실패 (' + res.status + ')';
+        showEditError(msg);
+        return false;
+      }
+      // 서버의 ok() JSON 기준으로 성공 처리
+      // ex) {result:"ok"}라면:
+      // const json = await res.json();
+
+      closeEditModal();
+      // 목록 새로고침(가장 간단)
+      location.href = C + '/admin/categories?updated=' + encodeURIComponent(code);
+    } catch (e) {
+      showEditError('네트워크 오류: ' + e.message);
+    }
+    return false;
+  }
+
+  function showEditError(msg) {
+    var el = document.getElementById('editAlert');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+</script>
+
+<script>
+  // 모달 열기
+  function openChildModal(parentCode, parentName) {
+    document.getElementById('childAlert').style.display = 'none';
+    document.getElementById('childForm').reset();
+
+    document.getElementById('child-parent-code').value = parentCode;
+    document.getElementById('child-parent-code-view').textContent = parentCode || '';
+    document.getElementById('child-parent-name').textContent = parentName || '';
+
+    document.getElementById('childModal').style.display = 'block';
+    document.getElementById('child-code').focus();
+  }
+
+  function closeChildModal() {
+    document.getElementById('childModal').style.display = 'none';
+  }
+
+  // 등록 (POST x-www-form-urlencoded → @RequestParam 매핑)
+  async function submitChild(ev) {
+    ev.preventDefault();
+
+    const parentCode = document.getElementById('child-parent-code').value;
+    const form = document.getElementById('childForm');
+    const fd = new URLSearchParams(new FormData(form));
+
+    const headers = { 'Accept':'application/json', 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' };
+    const c = csrf(); if (c) headers[c.header] = c.token;
+
+    try {
+      const res = await fetch(C + '/admin/categories/' + encodeURIComponent(parentCode) + '/children', {
+        method: 'POST',
+        headers,
+        body: fd.toString()
+      });
+      if (!res.ok) {
+        showChildError('등록 실패 (' + res.status + ')');
+        return false;
+      }
+      closeChildModal();
+      // 가장 간단: 목록 새로고침
+      location.href = C + '/admin/categories?created=' + encodeURIComponent(document.getElementById('child-code').value);
+    } catch (e) {
+      showChildError('네트워크 오류: ' + e.message);
+    }
+    return false;
+  }
+
+  function showChildError(msg) {
+    var el = document.getElementById('childAlert');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+</script>
+
+
+
+</body>
+</html>

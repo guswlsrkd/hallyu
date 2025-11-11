@@ -1,111 +1,186 @@
 package spr.com.hallyu.admin.service.impl;
 
-import java.util.*;
-import javax.annotation.Resource;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import spr.com.hallyu.admin.mapper.AdminCategoryMapper;
 import spr.com.hallyu.admin.service.CategoryService;
-import spr.com.hallyu.board.model.BoardCategory;
+
+import java.util.*;
 
 @Service
-@Transactional
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-  @Resource private AdminCategoryMapper mapper;
-
-  @Override @Transactional(readOnly = true)
-  public List<BoardCategory> findAll() { return mapper.findAll(); }
-
-  @Override @Transactional(readOnly = true)
-  public BoardCategory findOne(String code) { return mapper.findOne(code); }
-
-  @Override
-  public void create(BoardCategory c) {
-    int max = mapper.findMaxSortByParent(c.getParentCode());
-    c.setSortOrder(max + 1);
-    if (c.getUseYn() == null) c.setUseYn("Y");
-    if (c.getVisible() == null) c.setVisible(true);
-    if (c.getDepth() == null) c.setDepth(c.getParentCode() == null ? 0 : 1);
-    mapper.insert(c);
-  }
-
-  @Override
-  public void update(BoardCategory c) {
-    mapper.update(c);
-  }
-
-  @Override
-  public void delete(String code) {
-    if (mapper.countChildren(code) > 0) {
-      throw new IllegalStateException("자식 카테고리가 있어 삭제할 수 없습니다.");
+    private final AdminCategoryMapper mapper;
+    
+    @Autowired
+    public CategoryServiceImpl(AdminCategoryMapper mapper) {
+        this.mapper = mapper;   // <-- final 채움
     }
-    mapper.delete(code);
-  }
 
-  @Override
-  public void moveUp(String code) {
-    BoardCategory cur = mapper.findOne(code);
-    if (cur == null) return;
-    String parent = cur.getParentCode();
-    List<BoardCategory> siblings = mapper.findChildren(parent);
-    BoardCategory prev = null;
-    for (BoardCategory s : siblings) {
-      if (Objects.equals(s.getCode(), cur.getCode())) break;
-      prev = s;
-    }
-    if (prev == null) return;
-    swapSort(prev, cur);
-  }
-
-  @Override
-  public void moveDown(String code) {
-    BoardCategory cur = mapper.findOne(code);
-    if (cur == null) return;
-    String parent = cur.getParentCode();
-    List<BoardCategory> siblings = mapper.findChildren(parent);
-    for (int i = 0; i < siblings.size(); i++) {
-      if (Objects.equals(siblings.get(i).getCode(), cur.getCode())) {
-        if (i < siblings.size() - 1) {
-          swapSort(cur, siblings.get(i + 1));
+    /** 트리를 플랫하게(depth 필드로 들여쓰기 표현) */
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> findTreeFlat() {
+        List<Map<String,Object>> result = new ArrayList<>();
+        // 최상위부터 DFS
+        List<Map<String,Object>> tops = mapper.findTopList();
+        for (Map<String,Object> top : tops) {
+            result.add(top);
+            dfsAppend((String) top.get("code"), result);
         }
-        return;
-      }
+        return result;
     }
-  }
 
-  private void swapSort(BoardCategory a, BoardCategory b) {
-    Map<String,Object> p1 = new HashMap<>();
-    p1.put("code", a.getCode()); p1.put("sortOrder", b.getSortOrder());
-    Map<String,Object> p2 = new HashMap<>();
-    p2.put("code", b.getCode()); p2.put("sortOrder", a.getSortOrder());
-    mapper.updateSort(p1);
-    mapper.updateSort(p2);
-  }
+    private void dfsAppend(String parentCode, List<Map<String,Object>> acc) {
+        List<Map<String,Object>> children = mapper.findChildren(parentCode);
+        for (Map<String,Object> ch : children) {
+            acc.add(ch);
+            dfsAppend((String)ch.get("code"), acc);
+        }
+    }
 
-  @Override @Transactional(readOnly = true)
-  public List<BoardCategory> findTreeFlat() {
-    // flat 전체 → parent_code 기준으로 트리 → depth 순서로 플랫
-    List<BoardCategory> all = mapper.findAll();
-    Map<String, List<BoardCategory>> byParent = new HashMap<>();
-    for (BoardCategory c : all) {
-      byParent.computeIfAbsent(c.getParentCode(), k -> new ArrayList<>()).add(c);
+    @Override
+    public Map<String, Object> findOne(String code) {
+        return mapper.findOne(code);
     }
-    // 자식들 sort_order 보장
-    for (List<BoardCategory> list : byParent.values()) {
-      list.sort(Comparator.comparingInt(BoardCategory::getSortOrder).thenComparing(BoardCategory::getName));
-    }
-    List<BoardCategory> flat = new ArrayList<>();
-    render(byParent, null, flat);
-    return flat;
-  }
 
-  private void render(Map<String,List<BoardCategory>> byParent, String parent, List<BoardCategory> out) {
-    List<BoardCategory> children = byParent.get(parent);
-    if (children == null) return;
-    for (BoardCategory c : children) {
-      out.add(c);
-      render(byParent, c.getCode(), out);
+    @Override
+    @Transactional
+    public void create(Map<String, Object> dto) {
+        String parentCode = (String) dto.get("parentCode");
+        Integer max = mapper.findMaxSortOrder(parentCode);
+        int sortOrder = (max == null ? 0 : max) + 1;
+
+        int depth = 0;
+        if (parentCode != null) {
+            Map<String,Object> parent = mapper.findOne(parentCode);
+            depth = parent == null ? 0 : ((Number)parent.get("depth")).intValue() + 1;
+        }
+
+        dto.put("sortOrder", sortOrder);
+        dto.put("depth", depth);
+        mapper.insert(dto);
     }
-  }
+
+    @Override
+    @Transactional
+    public void update(Map<String, Object> dto) {
+        mapper.update(dto);
+    }
+    
+    @Override
+    public void createChild(Map<String,Object> dto) {
+        // 부모 코드에서 depth, sort_order 계산
+        String parentCode = (String) dto.get("parentCode");
+        Integer parentDepth = mapper.findDepth(parentCode);
+        int depth = (parentDepth == null ? 1 : parentDepth + 1);
+        int sortOrder = mapper.nextSortOrder(parentCode);
+
+        // visible/useYn 보정
+        String visible = String.valueOf(dto.getOrDefault("visible", "Y"));
+        String useYn = String.valueOf(dto.getOrDefault("useYn", "Y"));
+
+        dto.put("depth", depth);
+        dto.put("sortOrder", sortOrder);
+        dto.put("visible", ("Y".equalsIgnoreCase(visible) ? "Y" : "N"));
+        dto.put("useYn", ("Y".equalsIgnoreCase(useYn) ? "Y" : "N"));
+
+        mapper.insertChild(dto);
+    }
+
+    @Override
+    @Transactional
+    public void delete(String code) {
+        // 자식부터 삭제 (재귀 CTE가 안되면 findChildren로 재귀)
+        // 여기서는 CTE 사용 가정: findAllDescendants
+        List<String> descendants = mapper.findAllDescendants(code);
+        // 하위부터 삭제
+        Collections.reverse(descendants);
+        for (String c : descendants) mapper.delete(c);
+        mapper.delete(code);
+    }
+
+    @Override
+    @Transactional
+    public void moveUp(String code) {
+        Map<String,Object> me = mapper.findOne(code);
+        if (me == null) return;
+
+        String parentCode = (String) me.get("parent_code");
+        int myOrder = ((Number) me.get("sort_order")).intValue();
+
+        // 이전 형제 찾기
+        List<Map<String,Object>> siblings = mapper.findChildren(parentCode);
+        Map<String,Object> prev = null;
+        for (Map<String,Object> s : siblings) {
+            int o = ((Number)s.get("sort_order")).intValue();
+            if (o < myOrder) prev = s;
+        }
+        if (prev == null) return;
+
+        mapper.swapSortOrder(
+                code,
+                (String) prev.get("code"),
+                myOrder,
+                ((Number)prev.get("sort_order")).intValue()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void moveDown(String code) {
+        Map<String,Object> me = mapper.findOne(code);
+        if (me == null) return;
+System.out.println("ddddddddddddddddddd");
+        String parentCode = (String) me.get("parent_code");
+        int myOrder = ((Number) me.get("sort_order")).intValue();
+
+        List<Map<String,Object>> siblings = mapper.findChildren(parentCode);
+        Map<String,Object> next = null;
+        for (int i=0; i<siblings.size(); i++) {
+            Map<String,Object> s = siblings.get(i);
+            int o = ((Number)s.get("sort_order")).intValue();
+            System.out.println("myOrder : "+myOrder);
+            System.out.println("siblings.size() : "+siblings.size());
+            if (o == myOrder && i+1 < siblings.size()) {
+                next = siblings.get(i+1);
+                break;
+            }
+        }
+        System.out.println("next : "+next);
+        System.out.println("11111111111111111111");
+        if (next == null) return;
+        System.out.println("22222222222222222222222");
+        mapper.swapSortOrder(
+                code,
+                (String) next.get("code"),
+                myOrder,
+                ((Number)next.get("sort_order")).intValue()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void toggleVisible(String code, String visibleYorN) {
+        Map<String,Object> p = new HashMap<>();
+        p.put("code", code);
+        p.put("visible", "Y".equalsIgnoreCase(visibleYorN) ? "Y" : "N");
+        mapper.toggleVisible(p);
+    }
+
+    @Override
+    @Transactional
+    public void reorder(String parentCode, List<String> orderedCodes) {
+        int order = 1;
+        for (String code : orderedCodes) {
+            Map<String,Object> p = new HashMap<>();
+            p.put("code", code);
+            p.put("sortOrder", order++);
+            mapper.updateSortOrder(p);
+        }
+    }
 }

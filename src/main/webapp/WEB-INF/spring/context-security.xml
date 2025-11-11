@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:aop="http://www.springframework.org/schema/aop"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="
+               http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+               http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd
+               http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- 1. 로그인 진입점(EntryPoint) 빈을 정의합니다. -->
+	<!-- 인증되지 않은 사용자가 보호된 리소스에 접근 시 /admin/login 으로 보내도록 설정합니다. -->
+	<beans:bean id="loginEntryPoint"
+				class="org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint">
+		<beans:constructor-arg value="/admin/login"/>
+	</beans:bean>
+
+	<!-- Public assets - no security -->
+	<http pattern="/assets/**" security="none"/>
+
+	<!-- Admin paths - secured -->
+	<!-- /admin/** 패턴에 대한 보안 설정. entry-point-ref를 여기에 추가합니다. -->
+	<http pattern="/admin/**" use-expressions="true" entry-point-ref="loginEntryPoint">
+
+		<!-- 공개 경로 (admin 내에서 permitAll) -->
+		<intercept-url pattern="/admin/login" access="permitAll"/>
+		<intercept-url pattern="/admin/login/**" access="permitAll"/>
+		<intercept-url pattern="/admin/logout" access="permitAll"/>
+
+		<!-- 보호 구간 -->
+		<intercept-url pattern="/admin/**" access="isAuthenticated()"/>
+
+		<!-- CSRF 비활성(운영 정책에 맞게 조정) -->
+		<csrf disabled="true"/>
+
+		<!-- 폼 로그인 설정은 AdminAuthController에서 직접 처리하므로 여기서는 제거합니다. -->
+		<!-- <form-login login-page="/admin/login" authentication-failure-url="/admin/login?error"/> -->
+
+		<!-- 로그아웃 -->
+		<logout logout-url="/admin/logout" logout-success-url="/admin/login?logout" invalidate-session="true"/>
+
+		<!-- Custom filters for OAuth2 -->
+		<custom-filter ref="oauth2ClientContextFilter" before="EXCEPTION_TRANSLATION_FILTER"/>
+		<custom-filter ref="googleSsoFilter" before="FILTER_SECURITY_INTERCEPTOR"/>
+
+		<headers><hsts disabled="true"/></headers>
+
+	</http>
+
+	<!-- 2) (예시) 메모리 사용자 - 초기 관리자 테스트용 -->
+	<authentication-manager>
+		<authentication-provider>
+			<user-service>
+				<user name="admin" password="{noop}admin1234" authorities="ROLE_ADMIN"/>
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+
+	<!-- 3) OAuth2 공통 구성 -->
+	<beans:bean id="oauth2ClientContextFilter"
+				class="org.springframework.security.oauth2.client.filter.OAuth2ClientContextFilter"/>
+
+	<beans:bean id="oauth2ClientContext"
+				class="org.springframework.security.oauth2.client.DefaultOAuth2ClientContext"
+				scope="session">
+		<aop:scoped-proxy proxy-target-class="true"/>
+	</beans:bean>
+
+	<!-- 4) Google OAuth2 -->
+	<beans:bean id="googleClient"
+				class="org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails">
+		<beans:property name="clientId"             value="${google.clientId}"/>
+		<beans:property name="clientSecret"         value="${google.clientSecret}"/>
+		<beans:property name="userAuthorizationUri" value="https://accounts.google.com/o/oauth2/v2/auth"/>
+		<beans:property name="accessTokenUri"       value="https://oauth2.googleapis.com/token"/>
+		<beans:property name="scope">
+			<beans:list>
+				<beans:value>openid</beans:value>
+				<beans:value>email</beans:value>
+				<beans:value>profile</beans:value>
+			</beans:list>
+		</beans:property>
+
+		<!-- ★ redirect_uri 고정 (GCP 등록값과 1바이트 동일) -->
+		<beans:property name="preEstablishedRedirectUri"
+						value="http://localhost:8080/hallyu/admin/login/google"/>
+		<beans:property name="useCurrentUri" value="false"/>
+	</beans:bean>
+
+	<beans:bean id="googleRestTemplate"
+				class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
+		<beans:constructor-arg index="0" ref="googleClient"/>
+		<beans:constructor-arg index="1" ref="oauth2ClientContext"/>
+	</beans:bean>
+
+	<beans:bean id="googleTokenServices"
+				class="spr.com.hallyu.admin.security.GoogleUserInfoTokenServices">
+		<beans:constructor-arg value="https://www.googleapis.com/oauth2/v3/userinfo"/>
+		<beans:constructor-arg value="${google.clientId}"/>
+		<beans:property name="restTemplate" ref="googleRestTemplate"/>
+	</beans:bean>
+
+	<beans:bean id="oauthSuccessHandler"
+				class="spr.com.hallyu.admin.security.AdminCheckSuccessHandler">
+		<beans:property name="defaultTargetUrl" value="/admin/dashboard"/>
+		<beans:property name="alwaysUseDefaultTargetUrl" value="true"/>
+	</beans:bean>
+
+	<beans:bean id="oauthFailureHandler"
+				class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+		<beans:property name="defaultFailureUrl" value="/admin/login?error"/>
+	</beans:bean>
+
+	<beans:bean id="googleSsoFilter"
+				class="org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter">
+		<!-- 승인 시작 + 콜백 경로 (redirectUri와 동일한 path) -->
+		<beans:constructor-arg value="/admin/login/google"/>
+		<beans:property name="restTemplate"  ref="googleRestTemplate"/>
+		<beans:property name="tokenServices" ref="googleTokenServices"/>
+		<beans:property name="authenticationSuccessHandler" ref="oauthSuccessHandler"/>
+		<beans:property name="authenticationFailureHandler" ref="oauthFailureHandler"/>
+	</beans:bean>
+
+</beans:beans>

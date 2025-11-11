@@ -20,11 +20,12 @@ public class AdminBoardController {
                       @RequestParam(defaultValue="1") int page,
                       @RequestParam(defaultValue="10") int size,
                       Model model) {
-
+	System.out.println("22222222222222222");  
     model.addAttribute("code", code);
     model.addAttribute("items", boardService.findPageByCode(code, page, size));
     model.addAttribute("page", page);
     model.addAttribute("size", size);
+    System.out.println("33333333333333");
     return "admin/board/posts"; // /WEB-INF/jsp/admin/board/posts.jsp
   }
 

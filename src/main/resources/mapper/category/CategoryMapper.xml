@@ -7,7 +7,7 @@
   <select id="findTopMenus" resultType="spr.com.hallyu.board.model.BoardCategory">
     SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
     FROM board_category
-    WHERE parent_code IS NULL AND use_yn='Y' AND visible=1
+    WHERE parent_code IS NULL AND use_yn='Y' AND visible='Y'
     ORDER BY sort_order, name
   </select>
 
@@ -16,7 +16,7 @@
           resultType="spr.com.hallyu.board.model.BoardCategory">
     SELECT code,name,path,sort_order,use_yn,visible,parent_code,depth,created_at,updated_at
     FROM board_category
-    WHERE parent_code=#{parentCode} AND use_yn='Y' AND visible=1
+    WHERE parent_code=#{parentCode} AND use_yn='Y' AND visible='Y'
     ORDER BY sort_order, name
   </select>
 

@@ -14,6 +14,7 @@ public class BoardCategory {
     private Integer depth;
     private Date createdAt;
     private Date updatedAt;
+    private String writeAuth;
 
     // --- 하위 메뉴 리스트 추가 ---
     private List<BoardCategory> children;
@@ -51,4 +52,7 @@ public class BoardCategory {
 
     public List<BoardCategory> getChildren() { return children; }
     public void setChildren(List<BoardCategory> children) { this.children = children; }
+
+    public String getWriteAuth() { return writeAuth; }
+    public void setWriteAuth(String writeAuth) { this.writeAuth = writeAuth; }
 }

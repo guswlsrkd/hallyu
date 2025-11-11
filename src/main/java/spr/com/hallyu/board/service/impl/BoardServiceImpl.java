@@ -5,9 +5,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import spr.com.hallyu.board.mapper.BoardMapper;
+import spr.com.hallyu.board.model.BoardCategory;
 import spr.com.hallyu.board.model.BoardPost;
 import spr.com.hallyu.board.model.PageResult;
 import spr.com.hallyu.board.service.BoardService;
@@ -48,22 +52,50 @@ public class BoardServiceImpl implements BoardService {
     if (increaseView && id != null) boardMapper.increaseViews(id);
     return boardMapper.findOne(id);
   }
+  
+  @Override
+  @Transactional(readOnly = true)
+  public BoardCategory findByPath(String path) { 
+      return boardMapper.findByPath(path);
+  }
 
   @Override
-  public Long save(BoardPost p) {
-    if (p.getId() == null) {
-      if (p.getIsNotice() == null) p.setIsNotice(false);
-      boardMapper.insertPost(p); // useGeneratedKeys=true → id 채워짐
-      return p.getId();
-    } else {
-      if (p.getIsNotice() == null) p.setIsNotice(false);
-      boardMapper.updatePost(p);
-      return p.getId();
-    }
+  @Transactional(readOnly = true)
+  public BoardCategory findByCode(String code) {
+      return boardMapper.findByCode(code);
+  }
+  
+  
+  @Override
+  @Transactional(readOnly = true)
+  public List<BoardPost> findPostsByCategory(String categoryCode, int offset, int limit) {
+      Map<String, Object> param = new HashMap<>();
+      param.put("categoryCode", categoryCode);
+      param.put("offset", offset);
+      param.put("limit", limit);
+      return boardMapper.findPostsByCategory(param);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public int countPostsByCategory(String categoryCode) {
+      return boardMapper.countPostsByCategory(categoryCode);
+  }
+
+  @Override
+  public void writePost(BoardPost post) {
+      boardMapper.insertPost(post);
+  }
+
+  @Override
+  public void updatePost(BoardPost post) {
+      boardMapper.updatePost(post);
   }
 
   @Override
   public void delete(Long id) {
     boardMapper.deletePost(id);
   }
+
+  // findOne 메소드 중복으로 하나 삭제
 }

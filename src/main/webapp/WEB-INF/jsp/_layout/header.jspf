@@ -6,17 +6,22 @@
     <h1 class="logo">
       <a href="<c:url value='/'/>">Hallyu</a>
     </h1>  
-  <nav class="gnb">
-  <ul class="gnb-list">
-    <c:forEach items="${menuTree}" var="m">
-      <li class="${selected == m.code ? 'active' : ''}">
-        <a href="<c:url value='${m.path}'/>">${m.name}</a>
+  <ul class="gnb">
+  <ul>
+    <c:forEach var="top" items="${menuTree}">
+      <li>
+        <a href="${pageContext.request.contextPath}${top.path}">
+          <c:out value="${top.name}"/>
+          <!-- (선택) 화살표 아이콘: <i class="xi-caret-down-min" aria-hidden="true"></i> -->
+        </a>
 
-        <c:if test="${not empty m.children}">
-          <ul class="sub-menu">
-            <c:forEach items="${m.children}" var="s">
-              <li class="${subSelected == s.code ? 'active' : ''}">
-                <a href="<c:url value='${s.path}'/>">${s.name}</a>
+        <c:if test="${not empty top.children}">
+          <ul class="submenu">
+            <c:forEach var="ch" items="${top.children}">
+              <li>
+                <a href="${pageContext.request.contextPath}${ch.path}">
+                  <c:out value="${ch.name}"/>
+                </a>
               </li>
             </c:forEach>
           </ul>
@@ -24,6 +29,6 @@
       </li>
     </c:forEach>
   </ul>
-</nav>
+</ul>
   </div>
 </header>

@@ -1,58 +1,143 @@
 package spr.com.hallyu.admin.web;
 
-import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import spr.com.hallyu.admin.service.CategoryService;
-import spr.com.hallyu.board.model.BoardCategory;
 
 @Controller
-@RequestMapping("/admin/category")
+@RequestMapping("/admin/categories")
 public class AdminCategoryController {
 
-  @Resource private CategoryService categoryService;
+    private final CategoryService categoryService;
+    
+    @Autowired
+    public AdminCategoryController(CategoryService categoryService) {
+        this.categoryService = categoryService;
+    }
 
-  // 계층형(들여쓰기) 리스트
-  @GetMapping("/list")
-  public String list(@RequestParam(required=false) String edit, Model model){
-    model.addAttribute("items", categoryService.findTreeFlat()); // depth대로 플랫
-    if (edit != null) model.addAttribute("editItem", categoryService.findOne(edit));
-    return "admin/category/list";
-  }
+    @GetMapping
+    public String list(Model model) {
+        // 20행 NPE 방지
+        List<Map<String, Object>> categories = categoryService.findTreeFlat();
+        model.addAttribute("categories", categories);
+        return "admin/category/list"; // 뷰 경로도 확인
+    }
 
-  // 생성 (상위/하위 모두 사용) : code 신규 필요
-  @PostMapping("/create")
-  public String create(BoardCategory c){
-    categoryService.create(c);
-    return "redirect:/admin/category/list";
-  }
+    @PostMapping
+    @ResponseBody
+    public Map<String,Object> create(@RequestParam String code,
+                                     @RequestParam String name,
+                                     @RequestParam String path,
+                                     @RequestParam(required=false) String parentCode) {
+        Map<String,Object> dto = new HashMap<>();
+        dto.put("code", code);
+        dto.put("name", name);
+        dto.put("path", path);
+        dto.put("parentCode", parentCode);
+        categoryService.create(dto);
+        return ok();
+    }
 
-  // 수정
-  @PostMapping("/update")
-  public String update(BoardCategory c){
-    categoryService.update(c);
-    return "redirect:/admin/category/list?edit=" + c.getCode();
-  }
+    @GetMapping("/{code}")
+    @ResponseBody
+    public Map<String, Object> findOne(@PathVariable String code) {
+        return categoryService.findOne(code); // {code,name,path,useYn,visible, ...} 형태라고 가정
+    }
+    
+    @PutMapping("/{code}")
+    @ResponseBody
+    public Map<String,Object> update(@PathVariable String code,
+                                     @RequestParam String name,
+                                     @RequestParam String path,
+                                     @RequestParam String writeAuth,
+                                     @RequestParam(defaultValue="Y") String useYn,
+                                     @RequestParam(defaultValue="Y") String visible) {
+        Map<String,Object> dto = new HashMap<>();
+        dto.put("code", code);
+        dto.put("name", name);
+        dto.put("path", path);
+        dto.put("writeAuth", writeAuth);
+        dto.put("useYn", useYn);
+        dto.put("visible", visible);
+        categoryService.update(dto);
+        return ok();
+    }
+    
+ // /admin/categories 아래 컨트롤러
+    @PostMapping("/{parentCode}/children")
+    @ResponseBody
+    public Map<String,Object> createChild(@PathVariable String parentCode,
+                                          @RequestParam String code,
+                                          @RequestParam String name,
+                                          @RequestParam(required = false) String path,
+                                          @RequestParam String writeAuth,
+                                          @RequestParam(defaultValue="Y") String useYn,
+                                          @RequestParam(defaultValue="Y") String visible) {
+        Map<String,Object> dto = new HashMap<>();
+        dto.put("parentCode", parentCode);
+        dto.put("code", code);
+        dto.put("name", name);
+        dto.put("path", path);
+        dto.put("writeAuth", writeAuth);
+        dto.put("useYn", useYn);
+        dto.put("visible", visible);
+        // depth / sortOrder 는 서비스에서 자동 산정
+        categoryService.createChild(dto);
+        return ok(); // { "result": "ok" } 반환
+    }
 
-  // 삭제
-  @PostMapping("/delete")
-  public String delete(@RequestParam String code){
-    categoryService.delete(code);
-    return "redirect:/admin/category/list";
-  }
+    @DeleteMapping("/{code}")
+    @ResponseBody
+    public Map<String,Object> delete(@PathVariable String code) {
+        categoryService.delete(code);
+        return ok();
+    }
 
-  // 정렬 이동
-  @PostMapping("/move-up")
-  public String moveUp(@RequestParam String code){
-    categoryService.moveUp(code);
-    return "redirect:/admin/category/list";
-  }
+    @PostMapping("/{code}/moveUp")
+    public String moveUp(@PathVariable String code) {
+        categoryService.moveUp(code);
+        return "redirect:/admin/categories";
+    }
 
-  @PostMapping("/move-down")
-  public String moveDown(@RequestParam String code){
-    categoryService.moveDown(code);
-    return "redirect:/admin/category/list";
-  }
+    @PostMapping("/{code}/moveDown")
+    public String moveDown(@PathVariable String code) {
+        categoryService.moveDown(code);
+        return "redirect:/admin/categories";
+    }
+
+    @PostMapping("/{code}/toggleVisible")
+    
+    public String toggle(@PathVariable String code,
+                                     @RequestParam String visible) {
+        categoryService.toggleVisible(code, visible);
+        return "redirect:/admin/categories";
+    }
+
+    @PostMapping("/reorder")
+    @ResponseBody
+    public Map<String,Object> reorder(@RequestParam(required=false) String parentCode,
+                                      @RequestParam("codes") List<String> codes) {
+        categoryService.reorder(parentCode, codes);
+        return ok();
+    }
+
+    private Map<String,Object> ok() {
+        Map<String,Object> m = new HashMap<>();
+        m.put("ok", true);
+        return m;
+    }
 }

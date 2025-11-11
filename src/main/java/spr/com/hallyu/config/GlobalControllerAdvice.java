@@ -24,6 +24,7 @@ public class GlobalControllerAdvice {
         for (BoardCategory parent : topMenus) {
             List<BoardCategory> children = categoryMapper.findChildren(parent.getCode());
             parent.setChildren(children);
+            System.out.println("children : "+parent.getChildren().toString());
         }
 
         return topMenus;
