@@ -17,8 +17,10 @@
 
 	<!-- Public assets - no security -->
 	<http pattern="/assets/**" security="none"/>
+	<!-- API 경로는 보안 필터 체인을 적용하지 않음 -->
+	<http pattern="/admin/board/api/**" security="none"/>
 
-	<!-- Admin paths - secured -->
+	<!-- 2. 관리자 페이지 규칙 -->
 	<!-- /admin/** 패턴에 대한 보안 설정. entry-point-ref를 여기에 추가합니다. -->
 	<http pattern="/admin/**" use-expressions="true" entry-point-ref="loginEntryPoint">
 
@@ -26,6 +28,8 @@
 		<intercept-url pattern="/admin/login" access="permitAll"/>
 		<intercept-url pattern="/admin/login/**" access="permitAll"/>
 		<intercept-url pattern="/admin/logout" access="permitAll"/>
+		<!-- API 경로는 인증 없이 접근 허용 -->
+		<!-- <intercept-url pattern="/admin/board/api/**" access="permitAll"/> -->
 
 		<!-- 보호 구간 -->
 		<intercept-url pattern="/admin/**" access="isAuthenticated()"/>
@@ -45,6 +49,21 @@
 
 		<headers><hsts disabled="true"/></headers>
 
+	</http>
+
+	<!-- 3. 사용자 페이지 규칙 (가장 마지막에 위치) -->
+	<http pattern="/**" use-expressions="true" entry-point-ref="loginEntryPoint">
+		<!-- 글 목록, 글 보기 등 대부분의 경로는 누구나 접근 가능 -->
+		<intercept-url pattern="/board/**" access="permitAll"/>
+		<intercept-url pattern="/post/**" access="permitAll"/>
+		<intercept-url pattern="/" access="permitAll"/>
+
+		<!-- 글쓰기, 수정 등은 로그인한 사용자만 접근 가능 (JSP에서 세부 권한 체크) -->
+		<intercept-url pattern="/**/write" access="isAuthenticated()"/>
+		<intercept-url pattern="/**/edit" access="isAuthenticated()"/>
+		<intercept-url pattern="/**/delete" access="isAuthenticated()"/>
+
+		<csrf disabled="true"/>
 	</http>
 
 	<!-- 2) (예시) 메모리 사용자 - 초기 관리자 테스트용 -->

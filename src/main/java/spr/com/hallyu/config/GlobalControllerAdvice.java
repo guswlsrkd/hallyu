@@ -18,13 +18,18 @@ public class GlobalControllerAdvice {
     @ModelAttribute("menuTree")
     public List<BoardCategory> populateMenuTree() {
         // 상위 메뉴 조회
-        List<BoardCategory> topMenus = categoryMapper.findTopMenus();
+        List<BoardCategory> topMenus = categoryMapper.findTopMenus(); 
 
         // 하위 메뉴 채워넣기
         for (BoardCategory parent : topMenus) {
             List<BoardCategory> children = categoryMapper.findChildren(parent.getCode());
             parent.setChildren(children);
-            System.out.println("children : "+parent.getChildren().toString());
+            //System.out.println("children : "+parent.getChildren().toString());
+            for(int i=0;i<parent.getChildren().size();i++) {
+            	BoardCategory parent2 = parent.getChildren().get(i);
+            	parent2.setCode(parent.getChildren().get(i).getCode());
+            	System.out.println("parent.getCode() : "+parent.getChildren().get(i).getCode());
+            }
         }
 
         return topMenus;

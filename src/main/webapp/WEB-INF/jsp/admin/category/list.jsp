@@ -37,7 +37,7 @@
   </style>
 </head>
 <body>
-
+<%@ include file="/WEB-INF/jsp/admin/_layout/header.jspf" %>
   <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
     <h2>카테고리 관리</h2>
     <a href="${pageContext.request.contextPath}/" class="btn" target="_blank" title="새 탭에서 열기">사용자 홈으로</a>

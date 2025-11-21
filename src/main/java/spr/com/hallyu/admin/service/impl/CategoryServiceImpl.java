@@ -11,14 +11,13 @@ import spr.com.hallyu.admin.service.CategoryService;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
     private final AdminCategoryMapper mapper;
-    
+
     @Autowired
     public CategoryServiceImpl(AdminCategoryMapper mapper) {
-        this.mapper = mapper;   // <-- final 채움
+        this.mapper = mapper;
     }
 
     /** 트리를 플랫하게(depth 필드로 들여쓰기 표현) */
@@ -26,20 +25,29 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> findTreeFlat() {
         List<Map<String,Object>> result = new ArrayList<>();
-        // 최상위부터 DFS
-        List<Map<String,Object>> tops = mapper.findTopList();
-        for (Map<String,Object> top : tops) {
-            result.add(top);
-            dfsAppend((String) top.get("code"), result);
+        List<Map<String,Object>> topLevelNodes = mapper.findTopList();
+        for (Map<String,Object> node : topLevelNodes) {
+            node.put("depth", 0); // 최상위 노드의 깊이는 0
+            result.add(node);
+            // 자식 노드들을 찾아서 결과 리스트에 추가
+            findAndAddChildren(result, (String) node.get("code"), 1);
         }
         return result;
     }
 
-    private void dfsAppend(String parentCode, List<Map<String,Object>> acc) {
+    /**
+     * 특정 부모의 자식 노드를 재귀적으로 찾아 리스트에 추가하는 헬퍼 메소드
+     */
+    private void findAndAddChildren(List<Map<String, Object>> resultList, String parentCode, int depth) {
+        // 무한 재귀 방지: parentCode가 null이거나 비어있으면 더 이상 탐색하지 않음
+        if (parentCode == null || parentCode.isEmpty()) {
+            return;
+        }
         List<Map<String,Object>> children = mapper.findChildren(parentCode);
         for (Map<String,Object> ch : children) {
-            acc.add(ch);
-            dfsAppend((String)ch.get("code"), acc);
+            ch.put("depth", depth); // 현재 깊이 설정
+            resultList.add(ch); // 결과 리스트에 직접 추가
+            findAndAddChildren(resultList, (String)ch.get("code"), depth + 1); // 더 깊은 자식 탐색
         }
     }
 

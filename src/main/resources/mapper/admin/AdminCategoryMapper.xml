@@ -26,7 +26,15 @@
   <!-- 최상위 목록 -->
   <select id="findTopList" resultType="map">
    <![CDATA[
-    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible
+    SELECT
+      code        AS "code",
+      name        AS "name",
+      path        AS "path",
+      parent_code AS "parent_code",
+      depth       AS "depth",
+      sort_order  AS "sort_order",
+      use_yn      AS "use_yn",
+      visible     AS "visible"
     FROM board_category
     WHERE parent_code IS NULL
     ORDER BY sort_order ASC, name ASC
@@ -36,10 +44,18 @@
   <!-- 자식 목록 -->
   <select id="findChildren" parameterType="string" resultType="map">
    <![CDATA[
-     SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible
-  FROM board_category
-  WHERE COALESCE(parent_code, 'ROOT') = COALESCE(#{parentCode}, 'ROOT')
-  ORDER BY sort_order ASC, name ASC
+    SELECT
+      code        AS "code",
+      name        AS "name",
+      path        AS "path",
+      parent_code AS "parent_code",
+      depth       AS "depth",
+      sort_order  AS "sort_order",
+      use_yn      AS "use_yn",
+      visible     AS "visible"
+    FROM board_category
+    WHERE COALESCE(parent_code, 'ROOT') = COALESCE(#{parentCode}, 'ROOT')
+    ORDER BY sort_order ASC, name ASC
      ]]>
   </select>
 

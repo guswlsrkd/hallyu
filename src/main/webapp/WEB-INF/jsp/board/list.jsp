@@ -115,7 +115,7 @@
         </tbody>
     </table>
 
-    <div class="board-footer" style="margin-top: 16px; text-align: right;"> ${category.writeAuth}4444444444444444444
+    <div class="board-footer" style="margin-top: 16px; text-align: right;">
         <%-- 
             글쓰기 버튼 표시 조건:
             1. (관리자 전용 글쓰기) 게시판의 쓰기 권한(category.writeAuth)이 'ROLE_ADMIN'이고, 현재 사용자가 'ADMIN' 역할을 가졌을 때
@@ -128,9 +128,9 @@
             2. 또는, 현재 사용자가 'USER' 역할을 가지고 있으면서 게시판의 쓰기 권한이 'ROLE_USER'일 때
         --%>
        <sec:authorize access="hasRole('ADMIN') or (hasRole('USER') and '${category.writeAuth}' == 'ROLE_USER')">
-            <a href="${pageContext.request.contextPath}/board/${category.code}/write" class="btn btn-primary">글쓰기</a>1111
+            <a href="${pageContext.request.contextPath}/board/${category.code}/write" class="btn btn-primary">글쓰기</a>
       </sec:authorize>
-11111
+
     </div>
 
     <div class="pagination">

@@ -20,7 +20,7 @@
   </select>
 
   <select id="findPageByCode" resultMap="BoardMap">
-    SELECT id, category_code, title, content, writer, view_cnt, is_notice, created_at, updated_at
+    SELECT id, category_code, title, content, writer_id as writer, view_cnt, is_notice, created_at, updated_at
     FROM board_post
     WHERE code = #{code}
     ORDER BY is_notice DESC, id DESC
@@ -28,12 +28,12 @@
   </select>
 
   <select id="findOne" parameterType="long" resultMap="BoardMap">
-    SELECT id, category_code, title, content, writer, view_cnt, is_notice, created_at, updated_at
+    SELECT id, category_code, title, content, writer_id as writer, view_cnt, is_notice, created_at, updated_at
     FROM board_post WHERE id = #{id}
   </select>
 
   <insert id="insertPost" parameterType="spr.com.hallyu.board.model.BoardPost" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO board_post (category_code, title, content, writer, is_notice, view_cnt, created_at)
+    INSERT INTO board_post (category_code, title, content, writer_id, is_notice, view_cnt, created_at)
     VALUES (#{categoryCode}, #{title}, #{content}, #{writer}, false, 0, NOW())
   </insert>
 
@@ -78,7 +78,7 @@
       id,
       category_code,
       title,
-      writer,
+      writer_id as writer,
       created_at,
       view_cnt
     FROM board_post
