@@ -2,10 +2,14 @@
 package spr.com.hallyu.board.service;
 
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import spr.com.hallyu.board.model.BoardCategory;
 import spr.com.hallyu.board.model.BoardPost;
 import spr.com.hallyu.board.model.PageResult;
+import spr.com.hallyu.file.model.Attachment;
 
 public interface BoardService {
   long countByCode(String code);
@@ -20,6 +24,9 @@ public interface BoardService {
   
   BoardCategory findByPath(String path);   // /k-food 같은 path로 조회
   BoardCategory findByCode(String code);   // cat=code 로 조회
-  void writePost(BoardPost post);
-  void updatePost(BoardPost post);
+  void writePost(BoardPost post, List<MultipartFile> files);
+  void updatePost(BoardPost post, List<MultipartFile> files, List<Long> deleteFileIds);
+  String boardAuth(Map<String, Object> map);
+  List<Attachment> findAttachmentsByPostId(Long postId);
+  Attachment findAttachmentById(Long id);
 }

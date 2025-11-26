@@ -54,6 +54,14 @@
             gap: 8px; /* 버튼들 사이의 간격 */
             margin-top: 20px;
         }
+         .post-attachments { padding: 15px 0; border-bottom: 1px solid #eee; }
+        .post-attachments h4 { margin: 0 0 10px 0; font-size: 16px; }
+        .post-attachments ul { list-style: none; margin: 0; padding: 0; }
+        .post-attachments li { margin-bottom: 5px; }
+        .post-attachments li a { text-decoration: none; color: #007bff; }
+        .post-attachments li a:hover { text-decoration: underline; }
+        .post-attachments .file-size { font-size: 12px; color: #888; margin-left: 5px; }
+        .post-attachments i { margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -74,6 +82,22 @@
             <div class="post-content">
                 ${post.content}
             </div>
+            <c:if test="${not empty attachments}">
+                <div class="post-attachments">
+                    <h4>첨부파일</h4>
+                    <ul>
+                        <c:forEach var="file" items="${attachments}">
+                            <li>
+                                <i class="xi-paperclip"></i>
+                                <a href="${pageContext.request.contextPath}/board/download/attachment/${file.id}">
+                                    <c:out value="${file.originalFilename}"/>
+                                </a>
+                                <span class="file-size">(<fmt:formatNumber value="${file.fileSize / 1024}" maxFractionDigits="1"/> KB)</span>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </div>
+            </c:if>
 
             <div class="post-actions">
                 <a href="${pageContext.request.contextPath}/board/${post.categoryCode}" class="btn">목록으로</a>

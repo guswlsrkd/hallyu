@@ -28,4 +28,5 @@ public interface BoardMapper {
   
   List<BoardPost> findPostsByCategory(Map<String, Object> param);
   int countPostsByCategory(String categoryCode);
+  String boardAuth(Map<String, Object> param);
 }

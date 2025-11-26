@@ -43,7 +43,7 @@ public class AdminAuthController {
       );
       SecurityContext securityContext = SecurityContextHolder.getContext();
       securityContext.setAuthentication(authentication);
-
+      session.setAttribute("loginAuth", role);//권한
       // 3. 역할(Role)에 따라 리다이렉트 경로 분기
       if ("ROLE_ADMIN".equals(role)) {
         return "redirect:/admin/categories"; // 관리자는 관리자 카테고리 페이지로

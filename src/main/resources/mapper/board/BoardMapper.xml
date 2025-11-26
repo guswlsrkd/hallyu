@@ -94,4 +94,13 @@
     WHERE category_code = #{categoryCode}
   </select>
 
+  <select id="boardAuth" parameterType="map" resultType="String">
+    SELECT CASE WHEN COUNT(*) > 0 THEN 'Y'
+            ELSE 'N'
+           END AS AUTH     
+    FROM USER_MENU_PERMISSION
+   WHERE USER_ID = #{userId}
+    AND CATEGORY_CODE = #{code}
+  </select>
+
 </mapper>

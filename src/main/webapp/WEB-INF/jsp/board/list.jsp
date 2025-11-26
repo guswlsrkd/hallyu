@@ -127,9 +127,12 @@
             1. 현재 사용자가 'ADMIN' 역할을 가지고 있거나,
             2. 또는, 현재 사용자가 'USER' 역할을 가지고 있으면서 게시판의 쓰기 권한이 'ROLE_USER'일 때
         --%>
-       <sec:authorize access="hasRole('ADMIN') or (hasRole('USER') and '${category.writeAuth}' == 'ROLE_USER')">
+       <%-- <sec:authorize access="hasRole('ADMIN') or (hasRole('USER') and '${category.writeAuth}' == 'ROLE_USER')">
             <a href="${pageContext.request.contextPath}/board/${category.code}/write" class="btn btn-primary">글쓰기</a>
-      </sec:authorize>
+      </sec:authorize> --%>
+      <c:if test="${boardAuth == 'Y'}">
+      	<a href="${pageContext.request.contextPath}/board/${category.code}/write" class="btn btn-primary">글쓰기</a>
+      </c:if>
 
     </div>
 
