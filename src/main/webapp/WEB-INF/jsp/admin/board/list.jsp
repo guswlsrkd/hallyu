@@ -100,7 +100,7 @@
 <!-- ====== 게시글 수정 모달 ====== -->
 <div id="editPostModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
     <div style="width:720px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-        <form id="editPostForm" onsubmit="submitEditForm(event)">
+        <form id="editPostForm" onsubmit="submitEditForm(event)" enctype="multipart/form-data">
             <input type="hidden" id="edit-post-id" name="id" />
             <input type="hidden" id="edit-category-code" name="categoryCode" value="${category.code}" />
             <div style="padding:18px;">
@@ -117,6 +117,17 @@
                     <label for="edit-content" style="display:block; margin-bottom: 4px;">내용</label>
                     <textarea id="edit-content" name="content" rows="15" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"></textarea>
                 </div>
+                <!-- 기존 첨부파일 목록 -->
+                <div id="attachment-list-container" class="attachment-list" style="margin-top: 15px;">
+                	<ul id="attachment-list"></ul>
+                </div>
+                <div>
+                	<label for="edit-title" style="display:block; margin-bottom: 4px;">파일추가</label>
+                	<button type="button" id="add-file-btn" class="btn" onclick="addFile()"  style="margin-top: 5px;">파일 추가</button>
+                	<div id="file-container">
+                    <!-- 파일 입력 필드가 여기에 추가됩니다. -->
+                	</div>
+                </div>
             </div>
             <div style="background:#f7f7f7; padding:12px 18px; border-top:1px solid #eee; display:flex; gap:8px; justify-content:flex-end; border-radius: 0 0 12px 12px;">
                 <button type="button" class="btn" onclick="closeEditModal()">취소</button>
@@ -128,6 +139,8 @@
 <!-- ====== /게시글 수정 모달 ====== -->
 
 <script>
+
+
     const C = '${pageContext.request.contextPath}';
 	
 	
@@ -138,22 +151,44 @@
             const editPostIdInput = document.getElementById('edit-post-id');
             const editTitleInput = document.getElementById('edit-title');
             const editContentInput = document.getElementById('edit-content');
+            const attachmentList = document.getElementById('attachment-list');
+            const attachmentContainer = document.getElementById('attachment-list-container');
 
             // 폼 초기화
             editPostIdInput.value = '';
             editTitleInput.value = '';
             editContentInput.value = '';
+            attachmentList.innerHTML = ''; // 첨부파일 목록 초기화
+            attachmentContainer.style.display = 'none'; // 첨부파일 컨테이너 숨기기
 
             if (postId != null) { // 수정 모드
                 modalTitle.textContent = '게시글 수정';
 	            const response = await fetch(C+'/admin/board/api/posts/'+postId);
 	            if (!response.ok) throw new Error('게시글 정보를 불러오는 데 실패했습니다.');
 	
-	            const post = await response.json();
+	            
+	            const data = await response.json();
+	            const post = data.post;
+                const attachments = data.attachments;
 	
 	            editPostIdInput.value = post.id;
 	            editTitleInput.value = post.title;
 	            editContentInput.value = post.content;
+	            
+	            if (attachments && attachments.length > 0) {
+                    attachmentContainer.style.display = 'block';
+                    attachments.forEach(file => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <input type="checkbox" name="deleteFileIds" value="\${file.id}" id="del-file-\${file.id}">
+                            <label for="del-file-\${file.id}">삭제</label>
+                            &nbsp;
+                            <a href="\${C}/file/download/\${file.id}">\${file.originalFilename}</a>
+                        `;
+                        attachmentList.appendChild(li);
+                    });
+                }
+	            
         	} else { // 새 글 작성 모드
                 modalTitle.textContent = '새 게시글 작성';
             }
@@ -199,7 +234,9 @@
             const response = await fetch(gubunUrl, {
                  method: 'POST',
                  
-                 body: new URLSearchParams(formData)
+                 //body: new URLSearchParams(formData)
+                 // FormData 객체를 직접 body로 전송해야 파일이 포함됩니다.
+                 body: formData
              });
 
             if (!response.ok) {
@@ -261,6 +298,21 @@
             }
         }
     }
+ 
+   
+    async function addFile() {
+    	
+    	var fileInputHtml = `
+            <div class="file-input-group">
+                <input type="file" name="files" class="form-control">
+                <button type="button" class="btn btn-danger remove-file-btn">삭제</button>
+            </div>
+        `;
+    	document.getElementById('file-container').insertAdjacentHTML('beforeend', fileInputHtml);
+    }
+ 
+   
+ 
 </script>
 
 </body>

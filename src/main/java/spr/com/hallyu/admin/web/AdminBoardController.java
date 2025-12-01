@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import spr.com.hallyu.admin.service.CategoryService;
 import spr.com.hallyu.board.model.BoardPost;
+import spr.com.hallyu.board.service.BoardService;
+import spr.com.hallyu.file.model.Attachment;
 import spr.com.hallyu.admin.model.AdminBoardPost; // AdminBoardPost 모델 사용
 import spr.com.hallyu.admin.service.AdminBoardService; // AdminBoardService 사용
 
@@ -29,11 +32,14 @@ public class AdminBoardController {
 
     private final AdminBoardService adminBoardService; // AdminBoardService 주입
     private final CategoryService categoryService;
+    private final BoardService boardService;
+    
     
     @Autowired
-    public AdminBoardController(AdminBoardService adminBoardService, CategoryService categoryService) {
+    public AdminBoardController(AdminBoardService adminBoardService, CategoryService categoryService,BoardService boardService) {
         this.adminBoardService = adminBoardService;
         this.categoryService = categoryService;
+        this.boardService = boardService;
     }
 
     @GetMapping
@@ -62,19 +68,37 @@ public class AdminBoardController {
         return "admin/board/list"; // 뷰 경로
     }
 
+	/*
+	 * @GetMapping("/api/posts/{id}")
+	 * 
+	 * @ResponseBody public AdminBoardPost getPost(@PathVariable Long id) {
+	 * 
+	 * System.out.println("44444"); return adminBoardService.findOne(id, false); }
+	 */
     @GetMapping("/api/posts/{id}")
     @ResponseBody
-    public AdminBoardPost getPost(@PathVariable Long id) {
-        // 모달에 데이터를 채우기 위한 것이므로 조회수는 증가시키지 않음 (false)
-    	System.out.println("44444");
-        return adminBoardService.findOne(id, false);
+    public Map<String, Object> getPost(@PathVariable Long id) {
+        AdminBoardPost post = adminBoardService.findOne(id, false); // 조회수 증가 안함
+        List<Attachment> attachments = boardService.findAttachmentsByPostId(id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("post", post);
+        response.put("attachments", attachments);
+
+        return response;
     }
 
     @PostMapping("/api/posts/{id}")
     @ResponseBody
-    public Map<String, Object> updatePost(@PathVariable Long id, AdminBoardPost post) {
+    public Map<String, Object> updatePost(@PathVariable Long id,
+    		                              AdminBoardPost post, 
+    		                              @RequestParam(value = "files", required = false) List<MultipartFile> files,
+    		                              @RequestParam(value = "deleteFileIds", required = false) List<Long> deleteFileIds
+    		) {
         post.setId(id);
-        adminBoardService.updatePost(post);
+        System.out.println("files : "+files);
+        System.out.println("deleteFileIds : "+deleteFileIds);
+        adminBoardService.updatePost(post,files,deleteFileIds);
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -85,6 +109,8 @@ public class AdminBoardController {
     @ResponseBody
     public Map<String, Object> writePost(@PathVariable("code") String code,
                             @ModelAttribute AdminBoardPost post,
+                            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+                            @RequestParam(value = "deleteFileIds", required = false) List<Long> deleteFileIds,
                             HttpSession session) {
     	System.out.println("333333333");
     	 // 현재 로그인한 사용자 ID 가져오기
@@ -93,7 +119,7 @@ public class AdminBoardController {
         post.setWriterId(userId); // 작성자 ID 설정
         post.setCategoryCode(code); // 카테고리 코드 설정
 
-        adminBoardService.writePost(post); // 게시글 삽입 (이후 post 객체에 자동 생성된 ID가 담겨야 함)
+        adminBoardService.writePost(post,files,deleteFileIds); // 게시글 삽입 (이후 post 객체에 자동 생성된 ID가 담겨야 함)
 
         Map<String, Object> response = new HashMap<>();
         // 삽입 후, ID가 포함된 완전한 게시글 정보를 다시 조회하여 반환
