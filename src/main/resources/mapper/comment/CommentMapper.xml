@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="spr.com.hallyu.comment.mapper.CommentMapper">
+
+  
+
+  <insert id="insertComment" parameterType="map" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO comments (post_id, parent_id, writer_id, content, created_at)
+    VALUES (#{postId}, #{parentId}, #{writerId}, #{content}, NOW())
+  </insert>
+
+  <select id="selectCommentsByPostId" parameterType="long" resultType="spr.com.hallyu.common.utils.CamelMap">
+     SELECT id, post_id, parent_id, writer_id, content, created_at, updated_at
+     FROM comments
+     WHERE post_id = #{postId}
+     ORDER BY IF(parent_id IS NULL, id, parent_id), created_at ASC
+  </select>
+  
+  <update id="updateComment" parameterType="spr.com.hallyu.common.utils.CamelMap">
+       UPDATE comments SET content = #{content}, updated_at = NOW() WHERE id = #{id}
+  </update>
+
+  <delete id="deleteComment" parameterType="map">
+    DELETE FROM comments WHERE id = #{id}
+        <if test="writerId != null">AND writer_id = #{writerId}</if>
+  </delete>
+
+</mapper>
+

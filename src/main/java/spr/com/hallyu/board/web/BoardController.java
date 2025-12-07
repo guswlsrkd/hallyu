@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import spr.com.hallyu.board.model.BoardCategory;
 import spr.com.hallyu.board.model.BoardPost;
 import spr.com.hallyu.board.service.BoardService;
+import spr.com.hallyu.comment.service.CommentService;
+import spr.com.hallyu.common.utils.CamelMap;
 import spr.com.hallyu.file.model.Attachment;
 
 import org.springframework.core.io.Resource;
@@ -43,6 +45,9 @@ public class BoardController {
 	@Autowired
     private BoardService boardService;
 	
+	@Autowired
+	private CommentService commentService;
+	
 
 
 
@@ -53,15 +58,16 @@ public class BoardController {
                              Model model,
                              HttpSession session) {
 
-        BoardCategory category = boardService.findByCode(code);
-        if (category == null || !"Y".equalsIgnoreCase(category.getUseYn())) {
+		Map<String, Object> category = boardService.findByCode(code);
+		System.out.println("useYn : "+(String)category.get("use_yn"));
+        if (category == null || !"Y".equalsIgnoreCase((String)category.get("use_yn"))) {
             throw new IllegalArgumentException("존재하지 않거나 비활성 카테고리: " + code);
         }
         session.setAttribute("categoryCode", code);//세션으로관리
         // 현재 로그인한 사용자 정보를 가져옴
         String writer = SecurityContextHolder.getContext().getAuthentication().getName();
         System.out.println("writer : "+writer);
-        String loginAuth = (String)session.getAttribute("loginAuth");
+        String loginAuth = (String)session.getAttribute("loginAuth")==null?"":(String)session.getAttribute("loginAuth");
         if(!loginAuth.endsWith("ROLE_ADMIN")) {
         	 Map<String, Object> map = new HashMap();
         	 map.put("userId", writer);
@@ -81,8 +87,9 @@ public class BoardController {
 	@GetMapping("/{code}/write")
     public String writeForm(@PathVariable("code") String code, Model model) {
         // 글을 작성할 게시판의 정보를 가져와서 뷰에 전달합니다.
-        BoardCategory category = boardService.findByCode(code);
-        if (category == null || !"Y".equalsIgnoreCase(category.getUseYn())) {
+		Map<String, Object> category = boardService.findByCode(code);
+		System.out.println("use_yn : "+(String)category.get("use_yn"));
+        if (category == null || !"Y".equalsIgnoreCase((String)category.get("use_yn"))) {
             throw new IllegalArgumentException("존재하지 않거나 비활성 카테고리: " + code);
         }
 
@@ -115,11 +122,17 @@ public class BoardController {
         if (post == null) {
             throw new IllegalArgumentException("존재하지 않는 게시글입니다: " + id);
         }
+        // 게시글이 속한 카테고리 정보를 조회합니다.
+        //BoardCategory category = boardService.findByCode(post.getCategoryCode());
+        Map<String, Object> category = boardService.findByCode(post.getCategoryCode());
         // 첨부파일 목록을 조회합니다.
         List<Attachment> attachments = boardService.findAttachmentsByPostId(id);
-        
+        // 댓글 목록을 조회합니다.
+        List<CamelMap> comments = commentService.getCommentsByPostId(id);
         model.addAttribute("post", post);
+        model.addAttribute("category", category); // 모델에 카테고리 정보 추가
         model.addAttribute("attachments", attachments); // 모델에 첨부파일 목록 추가
+        model.addAttribute("comments", comments); // 모델에 댓글 목록 추가
         return "board/view";
     }
 

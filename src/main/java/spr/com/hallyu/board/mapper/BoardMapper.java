@@ -24,7 +24,7 @@ public interface BoardMapper {
   int increaseViews(@Param("id") Long id);
   
   BoardCategory findByPath(@Param("path") String path);
-  BoardCategory findByCode(@Param("code") String code);
+  Map<String, Object> findByCode(@Param("code") String code);
   
   List<BoardPost> findPostsByCategory(Map<String, Object> param);
   int countPostsByCategory(String categoryCode);

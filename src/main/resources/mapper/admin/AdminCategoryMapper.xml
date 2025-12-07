@@ -7,7 +7,7 @@
 <!-- 전체 카테고리 목록 (트리 평면 구조) -->
   <select id="findTreeFlat" resultType="map">
     <![CDATA[
-      SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth
+      SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth, use_comments
       FROM board_category
       ORDER BY COALESCE(parent_code, 'ROOT'), sort_order ASC, name ASC
     ]]>
@@ -16,7 +16,7 @@
   <!-- 단건 조회 -->
   <select id="findOne" parameterType="string" resultType="map">
    <![CDATA[
-    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth,
+     SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth, use_comments,
            created_at, updated_at
     FROM board_category
     WHERE code = #{code}
@@ -34,7 +34,8 @@
       depth       AS "depth",
       sort_order  AS "sort_order",
       use_yn      AS "use_yn",
-      visible     AS "visible"
+      visible     AS "visible",
+      use_comments AS "use_comments"
     FROM board_category
     WHERE parent_code IS NULL
     ORDER BY sort_order ASC, name ASC
@@ -52,7 +53,8 @@
       depth       AS "depth",
       sort_order  AS "sort_order",
       use_yn      AS "use_yn",
-      visible     AS "visible"
+      visible     AS "visible",
+      use_comments AS "use_comments"
     FROM board_category
     WHERE COALESCE(parent_code, 'ROOT') = COALESCE(#{parentCode}, 'ROOT')
     ORDER BY sort_order ASC, name ASC
@@ -73,10 +75,10 @@
   <insert id="insert" parameterType="map">
     <![CDATA[
     INSERT INTO board_category (
-      code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth
+      code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth, use_comments
     )
     VALUES
-      (#{code}, #{name}, #{path}, #{parentCode}, #{depth}, #{sortOrder}, COALESCE(#{useYn}, 'Y'), COALESCE(#{visible}, 'Y'), #{writeAuth})
+      (#{code}, #{name}, #{path}, #{parentCode}, #{depth}, #{sortOrder}, COALESCE(#{useYn}, 'Y'), COALESCE(#{visible}, 'Y'), #{writeAuth},#{useComments})
    ]]>         
   </insert>
 
@@ -88,6 +90,7 @@
         path = #{path},
         use_yn = #{useYn},
         visible = #{visible},
+        use_comments = #{useComments},
         write_auth = #{writeAuth}
     WHERE code = #{code}
      ]]>        
@@ -110,10 +113,10 @@
 <!-- 하위 카테고리 INSERT -->
 <insert id="insertChild" parameterType="map">
   INSERT INTO board_category (
-    code, name, parent_code, depth, sort_order, use_yn, visible, path, write_auth, created_at, updated_at
+    code, name, parent_code, depth, sort_order, use_yn, visible, path, write_auth, use_comments, created_at, updated_at
   )
   VALUES
-    (#{code}, #{name}, #{parentCode}, #{depth}, #{sortOrder}, #{useYn}, #{visible}, #{path}, #{writeAuth}, NOW(), NOW())
+    (#{code}, #{name}, #{parentCode}, #{depth}, #{sortOrder}, #{useYn}, #{visible}, #{path}, #{writeAuth},#{useComments}, NOW(), NOW())
 </insert>
   
 

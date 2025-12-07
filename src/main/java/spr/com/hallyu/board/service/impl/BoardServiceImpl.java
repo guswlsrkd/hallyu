@@ -78,7 +78,7 @@ public class BoardServiceImpl implements BoardService {
 
   @Override
   @Transactional(readOnly = true)
-  public BoardCategory findByCode(String code) {
+  public Map<String, Object> findByCode(String code) {
       return boardMapper.findByCode(code);
   }
   

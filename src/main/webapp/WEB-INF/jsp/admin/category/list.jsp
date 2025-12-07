@@ -149,6 +149,12 @@
         <label>경로(Path)</label>
         <input type="text" name="path" id="edit-path" placeholder="/k-food/intro" />
       </div>
+      
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+        <label>댓글 사용 여부</label>
+        <label><input type="radio" name="useComments" value="Y" checked /> 사용</label>
+        <label style="margin-left:8px;"><input type="radio" name="useComments" value="N" /> 미사용</label>
+      </div>
 
       <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
         <label>사용 여부</label>
@@ -210,6 +216,13 @@
       <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
         <label>경로(Path)</label>
         <input type="text" name="path" id="child-path" placeholder="/board/intro" />
+      </div>
+      
+       <!-- 댓글 사용 여부 체크박스 추가 -->
+      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+        <label>댓글 사용 여부</label>
+        <label><input type="radio" name="useComments" value="Y" checked /> 사용</label>
+        <label style="margin-left:8px;"><input type="radio" name="useComments" value="N" /> 미사용</label>
       </div>
 
       <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
@@ -326,6 +339,11 @@
 
     // 글쓰기 권한 select 채우기
     document.getElementById('edit-write-auth').value = data.write_auth || 'ROLE_USER';
+    
+    // 댓글 사용 여부 라디오 버튼 채우기
+    var useCommentsYn = (data.use_comments === 'N' ? 'N' : 'Y');
+    document.querySelector('#editForm input[name="useComments"][value="' + useCommentsYn + '"]').checked = true;
+
 
     // 모달 표시
     document.getElementById('editModal').style.display = 'block';

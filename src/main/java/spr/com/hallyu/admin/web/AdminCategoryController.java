@@ -63,16 +63,21 @@ public class AdminCategoryController {
     public Map<String,Object> update(@PathVariable String code,
                                      @RequestParam String name,
                                      @RequestParam String path,
-                                     @RequestParam String writeAuth,
-                                     @RequestParam(defaultValue="Y") String useYn,
-                                     @RequestParam(defaultValue="Y") String visible) {
+                                     @RequestParam(required = false) String writeAuth,
+                                     @RequestParam(required = false) String useYn,
+                                     @RequestParam(required = false) String visible,
+                                     @RequestParam(required = false) String useComments) {
         Map<String,Object> dto = new HashMap<>();
+        
+       System.out.println("useComments : "+useComments);
+        
         dto.put("code", code);
         dto.put("name", name);
         dto.put("path", path);
         dto.put("writeAuth", writeAuth);
-        dto.put("useYn", useYn);
-        dto.put("visible", visible);
+        dto.put("useYn", useYn != null ? useYn : "Y");
+        dto.put("visible", visible != null ? visible : "Y");
+        dto.put("useComments", useComments != null ? useComments : "N"); // 2. 체크박스 값 처리 (없으면 'N')
         categoryService.update(dto);
         return ok();
     }
@@ -86,7 +91,8 @@ public class AdminCategoryController {
                                           @RequestParam(required = false) String path,
                                           @RequestParam String writeAuth,
                                           @RequestParam(defaultValue="Y") String useYn,
-                                          @RequestParam(defaultValue="Y") String visible) {
+                                          @RequestParam(defaultValue="Y") String visible,
+                                          @RequestParam(defaultValue="N") String useComments) {
         Map<String,Object> dto = new HashMap<>();
         dto.put("parentCode", parentCode);
         dto.put("code", code);
@@ -95,6 +101,7 @@ public class AdminCategoryController {
         dto.put("writeAuth", writeAuth);
         dto.put("useYn", useYn);
         dto.put("visible", visible);
+        dto.put("useComments", useComments); // 2. 체크박스 값 처리 (없으면 'N')
         // depth / sortOrder 는 서비스에서 자동 산정
         categoryService.createChild(dto);
         return ok(); // { "result": "ok" } 반환

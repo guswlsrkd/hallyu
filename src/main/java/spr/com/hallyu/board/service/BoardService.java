@@ -23,7 +23,7 @@ public interface BoardService {
   int countPostsByCategory(String categoryCode);
   
   BoardCategory findByPath(String path);   // /k-food 같은 path로 조회
-  BoardCategory findByCode(String code);   // cat=code 로 조회
+  Map<String, Object> findByCode(String code);   // cat=code 로 조회
   void writePost(BoardPost post, List<MultipartFile> files);
   void updatePost(BoardPost post, List<MultipartFile> files, List<Long> deleteFileIds);
   String boardAuth(Map<String, Object> map);

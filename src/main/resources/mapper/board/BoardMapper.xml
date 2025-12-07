@@ -54,7 +54,7 @@
   <!-- path 로 카테고리 조회 (사용자 라우터용) -->
   <select id="findByPath" parameterType="string"
           resultType="spr.com.hallyu.board.model.BoardCategory">
-    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible
+    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, use_comments
     FROM board_category
     WHERE path = #{path}
       AND use_yn = 'Y'
@@ -64,8 +64,8 @@
 
   <!-- code 로 카테고리 조회 (게시판 목록용) -->
   <select id="findByCode" parameterType="string"
-          resultType="spr.com.hallyu.board.model.BoardCategory">
-    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth
+          resultType="map">
+    SELECT code, name, path, parent_code, depth, sort_order, use_yn, visible, write_auth, use_comments 
     FROM board_category
     WHERE code = #{code}
     LIMIT 1

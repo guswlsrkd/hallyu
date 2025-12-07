@@ -15,6 +15,7 @@ public class BoardCategory {
     private Date createdAt;
     private Date updatedAt;
     private String writeAuth;
+    private String useComments;
 
     // --- 하위 메뉴 리스트 추가 ---
     private List<BoardCategory> children;
@@ -55,4 +56,7 @@ public class BoardCategory {
 
     public String getWriteAuth() { return writeAuth; }
     public void setWriteAuth(String writeAuth) { this.writeAuth = writeAuth; }
+	
+    
+    
 }

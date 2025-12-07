@@ -36,6 +36,7 @@ public class AdminBoardController {
     
     
     @Autowired
+  
     public AdminBoardController(AdminBoardService adminBoardService, CategoryService categoryService,BoardService boardService) {
         this.adminBoardService = adminBoardService;
         this.categoryService = categoryService;
@@ -68,13 +69,6 @@ public class AdminBoardController {
         return "admin/board/list"; // 뷰 경로
     }
 
-	/*
-	 * @GetMapping("/api/posts/{id}")
-	 * 
-	 * @ResponseBody public AdminBoardPost getPost(@PathVariable Long id) {
-	 * 
-	 * System.out.println("44444"); return adminBoardService.findOne(id, false); }
-	 */
     @GetMapping("/api/posts/{id}")
     @ResponseBody
     public Map<String, Object> getPost(@PathVariable Long id) {
