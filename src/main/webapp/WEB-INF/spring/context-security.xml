@@ -19,6 +19,7 @@
 	<http pattern="/assets/**" security="none"/>
 	<!-- API 경로는 보안 필터 체인을 적용하지 않음 -->
 	<http pattern="/admin/board/api/**" security="none"/>
+	<http pattern="/admin/api/**" security="none"/>
 
 	<!-- 2. 관리자 페이지 규칙 -->
 	<!-- /admin/** 패턴에 대한 보안 설정. entry-point-ref를 여기에 추가합니다. -->

@@ -98,7 +98,7 @@
     SELECT CASE WHEN COUNT(*) > 0 THEN 'Y'
             ELSE 'N'
            END AS AUTH     
-    FROM USER_MENU_PERMISSION
+    FROM user_menu_permission
    WHERE USER_ID = #{userId}
     AND CATEGORY_CODE = #{code}
   </select>

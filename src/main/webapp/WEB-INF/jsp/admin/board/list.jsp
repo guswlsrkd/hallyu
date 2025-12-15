@@ -183,7 +183,7 @@
                             <input type="checkbox" name="deleteFileIds" value="\${file.id}" id="del-file-\${file.id}">
                             <label for="del-file-\${file.id}">삭제</label>
                             &nbsp;
-                            <a href="\${C}/file/download/\${file.id}">\${file.originalFilename}</a>
+                            <a href="\${C}/board/download/attachment/\${file.id}">\${file.originalFilename}</a>
                         `;
                         attachmentList.appendChild(li);
                     });

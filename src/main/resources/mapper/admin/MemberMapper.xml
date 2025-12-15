@@ -7,7 +7,7 @@
 <!-- 전체 카테고리 목록 (트리 평면 구조) -->
   <select id="memberList" resultType="map">
     <![CDATA[
-      SELECT ID, user_id AS USERNAME, PASSWORD, NAME, ROLE, CREATED_AT FROM USERS
+      SELECT ID, user_id AS USERNAME, PASSWORD, NAME, ROLE, CREATED_AT FROM users
        ORDER BY ROLE ASC;
     ]]>
   </select>

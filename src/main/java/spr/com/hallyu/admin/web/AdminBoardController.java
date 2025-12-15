@@ -16,9 +16,12 @@ import lombok.RequiredArgsConstructor;
 import spr.com.hallyu.admin.service.CategoryService;
 import spr.com.hallyu.board.model.BoardPost;
 import spr.com.hallyu.board.service.BoardService;
+import spr.com.hallyu.comment.service.CommentService;
+import spr.com.hallyu.common.utils.CamelMap;
 import spr.com.hallyu.file.model.Attachment;
 import spr.com.hallyu.admin.model.AdminBoardPost; // AdminBoardPost 모델 사용
 import spr.com.hallyu.admin.service.AdminBoardService; // AdminBoardService 사용
+import spr.com.hallyu.admin.service.AdminCommentService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,14 +36,16 @@ public class AdminBoardController {
     private final AdminBoardService adminBoardService; // AdminBoardService 주입
     private final CategoryService categoryService;
     private final BoardService boardService;
+    private final AdminCommentService adminCommentService;
     
     
     @Autowired
   
-    public AdminBoardController(AdminBoardService adminBoardService, CategoryService categoryService,BoardService boardService) {
+    public AdminBoardController(AdminBoardService adminBoardService, CategoryService categoryService,BoardService boardService,AdminCommentService adminCommentService) {
         this.adminBoardService = adminBoardService;
         this.categoryService = categoryService;
         this.boardService = boardService;
+        this.adminCommentService = adminCommentService;
     }
 
     @GetMapping
@@ -80,6 +85,29 @@ public class AdminBoardController {
         response.put("attachments", attachments);
 
         return response;
+    }
+    
+    /**
+     * 게시글 상세보기 페이지
+     */
+    @GetMapping("/{code}/{id}")
+    public String postView(@PathVariable String code,
+                           @PathVariable Long id,
+                           Model model) {
+        // 1. 게시글 정보 조회 (조회수 1 증가)
+        AdminBoardPost post = adminBoardService.findOne(id, true);
+        // 2. 첨부파일 목록 조회
+        List<Attachment> attachments = boardService.findAttachmentsByPostId(id);
+        // 3. 카테고리 정보 조회
+        Map<String, Object> category = categoryService.findOne(code);
+        // 댓글 목록을 조회합니다.
+        List<CamelMap> comments = adminCommentService.getCommentsByPostId(id);
+        model.addAttribute("post", post);
+        model.addAttribute("attachments", attachments);
+        model.addAttribute("category", category);
+        model.addAttribute("comments", comments);
+
+        return "admin/board/view"; // 상세보기 JSP 뷰 반환
     }
 
     @PostMapping("/api/posts/{id}")

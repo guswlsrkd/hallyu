@@ -12,6 +12,7 @@ import spr.com.hallyu.board.model.BoardPost;
 import spr.com.hallyu.file.model.Attachment;
 import spr.com.hallyu.file.mapper.AttachmentMapper;
 import javax.servlet.ServletContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,8 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional // 클래스 레벨에 트랜잭션 선언
 public class AdminBoardServiceImpl implements AdminBoardService {
 
     private final AdminBoardMapper adminBoardMapper; // AdminBoardMapper 주입
@@ -38,6 +41,7 @@ public class AdminBoardServiceImpl implements AdminBoardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AdminBoardPost> getPostsByCategory(String categoryCode, int limit, int offset) {
         Map<String, Object> params = new HashMap<>();
         params.put("categoryCode", categoryCode);
@@ -47,11 +51,13 @@ public class AdminBoardServiceImpl implements AdminBoardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public int getTotalPostsCount(String categoryCode) {
         return adminBoardMapper.countPostsByCategory(categoryCode);
     }
     
     @Override
+    @Transactional(readOnly = true) // 조회수 증가는 별도 트랜잭션으로 처리될 수 있으나, 여기서는 조회와 묶음
     public AdminBoardPost findOne(Long id, boolean increaseViewCount) {
         if (increaseViewCount) {
             adminBoardMapper.increaseViewCount(id);
@@ -92,6 +98,34 @@ public class AdminBoardServiceImpl implements AdminBoardService {
     
     @Override
     public void deletePost(AdminBoardPost post) {
+        Long postId = post.getId();
+        if (postId == null) return;
+
+        // 1. 게시글에 속한 첨부파일 목록을 DB에서 조회
+        List<Attachment> attachments = attachmentMapper.findByPostId(postId);
+
+        // 2. 물리적 파일 삭제
+        for (Attachment attachment : attachments) {
+            File file = new File(attachment.getFilePath(), attachment.getStoredFilename());
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+
+        // 3. DB에서 첨부파일 정보 삭제 (게시글에 종속된 모든 파일)
+        if (!attachments.isEmpty()) {
+        	 // 첨부파일 목록에서 ID 목록(List<Long>)을 추출
+            //List<Long> attachmentIds = attachments.stream().map(Attachment::getId).collect(Collectors.toList());
+            // attachments 리스트에서 ID만 추출하여 새로운 List<Long>을 만듭니다.
+            List<Long> attachmentIds = new ArrayList<>();
+            for (Attachment attachment : attachments) {
+                attachmentIds.add(attachment.getId());
+            }
+           
+            attachmentMapper.deleteAttachments(attachmentIds); // 기존 메소드 재사용
+        }
+
+        // 4. 게시글 삭제
         adminBoardMapper.deletePost(post);
     }
     
