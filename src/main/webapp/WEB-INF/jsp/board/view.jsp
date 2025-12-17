@@ -87,7 +87,7 @@
             </div>
 
             <div class="post-content">
-                ${post.content}
+                <c:out value="${post.content}" escapeXml="false" />
             </div>
             <c:if test="${not empty attachments}">
                 <div class="post-attachments">

@@ -11,7 +11,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.ResponseEntity;
@@ -107,7 +108,13 @@ public class BoardController {
         String writer = SecurityContextHolder.getContext().getAuthentication().getName();
         post.setWriter(writer);
         post.setCategoryCode(code); // URL 경로에서 받은 code를 categoryCode로 설정
-     
+        // XSS 방지를 위한 HTML 필터링 (Jsoup 라이브러리 사용)
+        Safelist safelist = Safelist.relaxed()
+                .addTags("font", "span") // font 태그와 span 태그 허용
+                .addAttributes("font", "color", "size", "face") // font 태그의 color, size, face 속성 허용
+                .addAttributes("span", "style"); // span 태그의 style 속성 허용
+        post.setContent(Jsoup.clean(post.getContent(), safelist));
+       
 
        
         boardService.writePost(post, files);
@@ -122,6 +129,7 @@ public class BoardController {
         if (post == null) {
             throw new IllegalArgumentException("존재하지 않는 게시글입니다: " + id);
         }
+        
         // 게시글이 속한 카테고리 정보를 조회합니다.
         //BoardCategory category = boardService.findByCode(post.getCategoryCode());
         Map<String, Object> category = boardService.findByCode(post.getCategoryCode());
@@ -145,7 +153,7 @@ public class BoardController {
         String currentUsername = authentication.getName();
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
+        
         if (!post.getWriter().equals(currentUsername) && !isAdmin) {
             throw new AccessDeniedException("수정할 권한이 없습니다.");
         }
@@ -164,6 +172,17 @@ public class BoardController {
         post.setId(id); // URL에서 받은 id를 post 객체에 설정
         String categoryCode = (String)session.getAttribute("categoryCode");
         post.setCategoryCode(categoryCode);
+        
+        // 세션 대신 기존 게시물의 카테고리 코드를 사용하여 안정성 확보
+        BoardPost originalPost = boardService.findOne(id, false);
+        post.setCategoryCode(originalPost.getCategoryCode());
+
+        // XSS 방지를 위한 HTML 필터링 (Jsoup 라이브러리 사용)
+        Safelist safelist = Safelist.relaxed()
+                .addTags("font", "span")
+                .addAttributes("font", "color", "size", "face")
+                .addAttributes("span", "style");
+        post.setContent(Jsoup.clean(post.getContent(), safelist));
         // 여기서도 수정 권한을 한번 더 체크하는 것이 더 안전합니다.
         boardService.updatePost(post, files, deleteFileIds);
 
