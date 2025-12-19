@@ -38,6 +38,7 @@ import spr.com.hallyu.file.model.Attachment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
@@ -73,9 +74,13 @@ public class BoardController {
         	 Map<String, Object> map = new HashMap();
         	 map.put("userId", writer);
         	 map.put("code", code);
+        	 //System.out.println("boardAuth: "+boardService.boardAuth(map));
         	 model.addAttribute("boardAuth", boardService.boardAuth(map));
+        }else {
+        	 model.addAttribute("boardAuth", "Y");
         }
-        System.out.println("loginAuth: "+loginAuth);
+       
+        
         int offset = (page - 1) * size;
         model.addAttribute("category", category);
         model.addAttribute("list", boardService.findPostsByCategory(code, offset, size));
@@ -111,8 +116,10 @@ public class BoardController {
         // XSS 방지를 위한 HTML 필터링 (Jsoup 라이브러리 사용)
         Safelist safelist = Safelist.relaxed()
                 .addTags("font", "span") // font 태그와 span 태그 허용
-                .addAttributes("font", "color", "size", "face") // font 태그의 color, size, face 속성 허용
-                .addAttributes("span", "style"); // span 태그의 style 속성 허용
+                .addAttributes("font", "color", "size", "face")
+                .addAttributes("span", "style")
+                // 이미지 태그와 관련 속성 허용
+                .addAttributes("img", "src", "style", "alt", "title");
         post.setContent(Jsoup.clean(post.getContent(), safelist));
        
 
@@ -157,6 +164,7 @@ public class BoardController {
         if (!post.getWriter().equals(currentUsername) && !isAdmin) {
             throw new AccessDeniedException("수정할 권한이 없습니다.");
         }
+        
         List<Attachment> attachments = boardService.findAttachmentsByPostId(id);
         model.addAttribute("attachments", attachments);
         model.addAttribute("post", post);
@@ -180,8 +188,10 @@ public class BoardController {
         // XSS 방지를 위한 HTML 필터링 (Jsoup 라이브러리 사용)
         Safelist safelist = Safelist.relaxed()
                 .addTags("font", "span")
-                .addAttributes("font", "color", "size", "face")
-                .addAttributes("span", "style");
+                .addAttributes("font", "color", "size", "face") 
+                .addAttributes("span", "style")
+                // 이미지 태그와 관련 속성 허용
+                .addAttributes("img", "src", "style", "alt", "title");
         post.setContent(Jsoup.clean(post.getContent(), safelist));
         // 여기서도 수정 권한을 한번 더 체크하는 것이 더 안전합니다.
         boardService.updatePost(post, files, deleteFileIds);
