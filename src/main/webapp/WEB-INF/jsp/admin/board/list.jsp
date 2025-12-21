@@ -11,25 +11,12 @@
     <%-- 스마트에디터 스크립트 추가 --%>
     <script type="text/javascript" src="<c:url value='/assets/common/js/jquery-3.7.1.min.js'/>"></script>
     <script type="text/javascript" src="<c:url value='/assets/smarteditor2/smarteditor2-2.10.0/package/dist/js/service/HuskyEZCreator.js'/>" charset="utf-8"></script>
+    <%-- 게시판 CSS 추가 --%>
+    <link rel="stylesheet" href="<c:url value='/assets/admin/css/board.css'/>">
     
     <!-- CSRF 토큰을 위한 meta 태그 추가 -->
    <%--  <meta name="_csrf" content="${_csrf.token}"/>
     <meta name="_csrf_header" content="${_csrf.headerName}"/> --%>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .pagination { margin-top: 20px; text-align: center; }
-        .pagination a { padding: 5px 10px; border: 1px solid #ddd; margin: 0 5px; text-decoration: none; color: #333; }
-        .pagination a.active { background-color: #007bff; color: white; }
-        .board-title-container { display: flex; align-items: center; gap: 10px; }
-        .category-select { font-size: 1em; padding: 4px 8px; }
-        .row-actions { display:flex; gap:6px; }
-        .btn { cursor:pointer; padding:4px 8px; border:1px solid #ddd; background:#fff; border-radius:6px; }
-        .btn:hover { background:#f2f2f2; }
-        .btn-primary { background: #007bff; color: white; border-color: #007bff; }
-    </style>
 </head>
 <body>
 <%@ include file="/WEB-INF/jsp/admin/_layout/header.jspf" %>
@@ -46,12 +33,12 @@
     </select>
 </div>
 
-<div style="margin-top: 20px; text-align: right;">
+<div class="top-actions">
    <%--  <a href="${pageContext.request.contextPath}/admin/board/${category.code}/write" class="btn btn-primary">새 글 작성</a> --%>
     <button type="button" class="btn btn-primary" onclick="openEditModal(null)">새 글 작성</button>
 </div>
 
-<table id = "postTable">
+<table id="postTable" class="board-table">
     <thead>
     <tr>
         <th>ID</th>
@@ -102,38 +89,38 @@
 </div>
 
 <!-- ====== 게시글 수정 모달 ====== -->
-<div id="editPostModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
-    <div style="width:720px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+<div id="editPostModal" class="modal-overlay">
+    <div class="modal-dialog">
         <form id="editPostForm" onsubmit="submitEditForm(event)" enctype="multipart/form-data">
             <input type="hidden" id="edit-post-id" name="id" />
             <input type="hidden" id="edit-category-code" name="categoryCode" value="${category.code}" />
-            <div style="padding:18px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
-                    <h3 style="margin:0; font-size:18px;">게시글 수정</h3>
-                    <button type="button" onclick="closeEditModal()" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;">×</button>
+            <div class="modal-content-wrap">
+                <div class="modal-header">
+                    <h3 class="modal-title">게시글 수정</h3>
+                    <button type="button" onclick="closeEditModal()" class="modal-close-btn">×</button>
                 </div>
 
-                <div style="margin-bottom: 10px;">
-                    <label for="edit-title" style="display:block; margin-bottom: 4px;">제목</label>
-                    <input type="text" id="edit-title" name="title" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;" required/>
+                <div class="form-group">
+                    <label for="edit-title" class="form-label">제목</label>
+                    <input type="text" id="edit-title" name="title" class="form-input" required/>
                 </div>
                 <div>
-                    <label for="edit-content" style="display:block; margin-bottom: 4px;">내용</label>
-                    <textarea id="edit-content" name="content" rows="15" style="width:100%; height:400px; display:none;"></textarea>
+                    <label for="edit-content" class="form-label">내용</label>
+                    <textarea id="edit-content" name="content" rows="15" class="form-textarea-hidden"></textarea>
                 </div>
                 <!-- 기존 첨부파일 목록 -->
-                <div id="attachment-list-container" class="attachment-list" style="margin-top: 15px;">
+                <div id="attachment-list-container" class="attachment-list-container">
                 	<ul id="attachment-list"></ul>
                 </div>
                 <div>
-                	<label for="edit-title" style="display:block; margin-bottom: 4px;">파일추가</label>
-                	<button type="button" id="add-file-btn" class="btn" onclick="addFile()"  style="margin-top: 5px;">파일 추가</button>
+                	<label class="form-label">파일추가</label>
+                	<button type="button" id="add-file-btn" class="btn add-file-btn" onclick="addFile()">파일 추가</button>
                 	<div id="file-container">
                     <!-- 파일 입력 필드가 여기에 추가됩니다. -->
                 	</div>
                 </div>
             </div>
-            <div style="background:#f7f7f7; padding:12px 18px; border-top:1px solid #eee; display:flex; gap:8px; justify-content:flex-end; border-radius: 0 0 12px 12px;">
+            <div class="modal-footer">
                 <button type="button" class="btn" onclick="closeEditModal()">취소</button>
                 <button type="submit" class="btn btn-primary">저장</button>
             </div>
@@ -242,7 +229,7 @@
 
         // textarea를 감싸고 있는 부모 div의 내용을 비워서 에디터를 완전히 제거합니다.
         const editorParent = document.getElementById('edit-content').parentElement;
-        editorParent.innerHTML = '<textarea id="edit-content" name="content" rows="15" style="width:100%; height:400px; display:none;"></textarea>';
+        editorParent.innerHTML = '<textarea id="edit-content" name="content" rows="15" class="form-textarea-hidden"></textarea>';
     }
 
     // 수정 모달 닫기
@@ -355,9 +342,9 @@
     async function addFile() {
     	
     	var fileInputHtml = `
-            <div class="file-input-group" style="display:flex; align-items:center; margin-top:5px;">
+            <div class="file-input-group">
                 <input type="file" name="files" class="form-control">
-                <button type="button" class="btn remove-file-btn" style="margin-left:8px;">삭제</button>
+                <button type="button" class="btn remove-file-btn">삭제</button>
             </div>
         `;
     	document.getElementById('file-container').insertAdjacentHTML('beforeend', fileInputHtml);

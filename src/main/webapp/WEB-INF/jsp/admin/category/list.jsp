@@ -21,24 +21,13 @@
     <meta name="_csrf_param" content="${_csrf.parameterName}"/>
   </c:if>
 
-  <style>
-    body { font-family: system-ui, sans-serif; line-height: 1.5; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; }
-    th { background: #f7f7f7; text-align: left; }
-    .muted { color: #888; font-size: 12px; }
-    .badge { display:inline-block; padding:2px 8px; border-radius: 10px; font-size: 12px; }
-    .badge.on  { background:#e6ffed; border:1px solid #b7f5c5; }
-    .badge.off { background:#ffecec; border:1px solid #ffb8b8; }
-    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
-    button, .btn { cursor:pointer; padding:4px 8px; border:1px solid #ddd; background:#fff; border-radius:6px; }
-    button:hover, .btn:hover { background:#f2f2f2; }
-    .btn-up, .btn-down { width:32px; text-align:center; }
-  </style>
+  <jsp:useBean id="now" class="java.util.Date" />
+  <fmt:formatDate value="${now}" pattern="yyyyMMddHHmmss" var="cssVer" />
+  <link rel="stylesheet" href="<c:url value='/assets/admin/css/category.css'/>?v=${cssVer}">
 </head>
 <body>
 <%@ include file="/WEB-INF/jsp/admin/_layout/header.jspf" %>
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <div class="page-header">
     <h2>카테고리 관리</h2>
     <a href="${pageContext.request.contextPath}/" class="btn" target="_blank" title="새 탭에서 열기">사용자 홈으로</a>
   </div>
@@ -125,50 +114,50 @@
   </table>
   
   <!-- ====== 수정 모달 ====== -->
-<div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
-  <div style="width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; padding:18px 18px 10px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-      <h3 style="margin:0; font-size:18px;">카테고리 수정</h3>
-      <button type="button" onclick="closeEditModal()" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;">×</button>
+<div id="editModal" class="modal-overlay">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">카테고리 수정</h3>
+      <button type="button" onclick="closeEditModal()" class="modal-close-btn">×</button>
     </div>
 
     <form id="editForm" onsubmit="return submitEdit(event)">
       <input type="hidden" name="code" id="edit-code" />
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>코드</label>
         <input type="text" id="edit-code-view" class="mono" readonly />
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>이름</label>
         <input type="text" name="name" id="edit-name" required />
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>경로(Path)</label>
         <input type="text" name="path" id="edit-path" placeholder="/k-food/intro" />
       </div>
       
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+      <div class="form-row mb-14">
         <label>댓글 사용 여부</label>
         <label><input type="radio" name="useComments" value="Y" checked /> 사용</label>
         <label style="margin-left:8px;"><input type="radio" name="useComments" value="N" /> 미사용</label>
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>사용 여부</label>
         <label><input type="radio" name="useYn" value="Y" checked /> 사용</label>
         <label style="margin-left:8px;"><input type="radio" name="useYn" value="N" /> 미사용</label>
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+      <div class="form-row mb-14">
         <label>표시 여부</label>
         <label><input type="radio" name="visible" value="Y" checked /> 표시</label>
         <label style="margin-left:8px;"><input type="radio" name="visible" value="N" /> 비표시</label>
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+      <div class="form-row mb-14">
         <label for="edit-write-auth">글쓰기 권한</label>
         <select name="writeAuth" id="edit-write-auth" style="padding: 4px;">
           <option value="ROLE_USER">사용자 이상</option>
@@ -176,23 +165,23 @@
         </select>
       </div>
 
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <div class="modal-footer">
         <button type="button" class="btn" onclick="closeEditModal()">취소</button>
         <button type="submit" class="btn btn-primary">저장</button>
       </div>
     </form>
 
-    <div id="editAlert" style="display:none; margin-top:8px; color:#b91c1c;"></div>
+    <div id="editAlert" class="alert-msg"></div>
   </div>
 </div>
 <!-- ====== /수정 모달 ====== -->
 
 <!-- ====== 하위등록 모달 ====== -->
-<div id="childModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
-  <div style="width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-      <h3 style="margin:0; font-size:18px;">하위 카테고리 등록</h3>
-      <button type="button" onclick="closeChildModal()" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;">×</button>
+<div id="childModal" class="modal-overlay">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">하위 카테고리 등록</h3>
+      <button type="button" onclick="closeChildModal()" class="modal-close-btn">×</button>
     </div>
 
     <form id="childForm" onsubmit="return submitChild(event)">
@@ -203,41 +192,41 @@
         (<code class="mono" id="child-parent-code-view"></code>)
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>코드</label>
         <input type="text" name="code" id="child-code" placeholder="예: intro" required />
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>이름</label>
         <input type="text" name="name" id="child-name" required />
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>경로(Path)</label>
         <input type="text" name="path" id="child-path" placeholder="/board/intro" />
       </div>
       
        <!-- 댓글 사용 여부 체크박스 추가 -->
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+      <div class="form-row mb-14">
         <label>댓글 사용 여부</label>
         <label><input type="radio" name="useComments" value="Y" checked /> 사용</label>
         <label style="margin-left:8px;"><input type="radio" name="useComments" value="N" /> 미사용</label>
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px;">
+      <div class="form-row">
         <label>사용 여부</label>
         <label><input type="radio" name="useYn" value="Y" checked /> 사용</label>
         <label style="margin-left:8px;"><input type="radio" name="useYn" value="N" /> 미사용</label>
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+      <div class="form-row mb-14">
         <label>표시 여부</label>
         <label><input type="radio" name="visible" value="Y" checked /> 표시</label>
         <label style="margin-left:8px;"><input type="radio" name="visible" value="N" /> 비표시</label>
       </div>
 
-      <div style="display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:14px;">
+      <div class="form-row mb-14">
         <label for="child-write-auth">글쓰기 권한</label>
         <select name="writeAuth" id="child-write-auth" style="padding: 4px;">
           <option value="ROLE_USER">사용자 이상</option>
@@ -245,13 +234,13 @@
         </select>
       </div>
 
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <div class="modal-footer">
         <button type="button" class="btn" onclick="closeChildModal()">취소</button>
         <button type="submit" class="btn btn-primary">등록</button>
       </div>
     </form>
 
-    <div id="childAlert" style="display:none; margin-top:8px; color:#b91c1c;"></div>
+    <div id="childAlert" class="alert-msg"></div>
   </div>
 </div>
 <!-- ====== /하위등록 모달 ====== -->

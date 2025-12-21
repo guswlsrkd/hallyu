@@ -1,0 +1,41 @@
+@charset "UTF-8";
+
+body { font-family: system-ui, sans-serif; line-height: 1.5; }
+
+/* 레이아웃 */
+.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+
+/* 테이블 */
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ddd; padding: 8px; }
+th { background: #f7f7f7; text-align: left; }
+
+/* 유틸리티 */
+.muted { color: #888; font-size: 12px; }
+.mono { font-family: monospace; }
+
+/* 뱃지 */
+.badge { display:inline-block; padding:2px 8px; border-radius: 10px; font-size: 12px; }
+.badge.on  { background:#e6ffed; border:1px solid #b7f5c5; }
+.badge.off { background:#ffecec; border:1px solid #ffb8b8; }
+
+/* 버튼 */
+.row-actions { display:flex; gap:6px; flex-wrap:wrap; }
+button, .btn { cursor:pointer; padding:4px 8px; border:1px solid #ddd; background:#fff; border-radius:6px; }
+button:hover, .btn:hover { background:#f2f2f2; }
+.btn-up, .btn-down { width:32px; text-align:center; }
+.btn-primary { background: #007bff; color: white; border-color: #007bff; }
+.btn-primary:hover { background: #0056b3; }
+
+/* 모달 */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; }
+.modal-dialog { width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.modal-title { margin:0; font-size:18px; }
+.modal-close-btn { border:none; background:transparent; font-size:20px; line-height:1; cursor:pointer; }
+.modal-footer { display:flex; gap:8px; justify-content:flex-end; margin-top: 15px; }
+
+/* 폼 */
+.form-row { display:grid; grid-template-columns:110px 1fr; gap:8px; align-items:center; margin-bottom:8px; }
+.form-row.mb-14 { margin-bottom: 14px; }
+.alert-msg { display:none; margin-top:8px; color:#b91c1c; }

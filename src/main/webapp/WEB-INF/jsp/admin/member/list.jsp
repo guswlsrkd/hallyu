@@ -21,27 +21,13 @@
     <meta name="_csrf_param" content="${_csrf.parameterName}"/>
   </c:if>
 
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      line-height: 1.5;
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; }
-    th { background: #f7f7f7; text-align: left; }
-    .muted { color: #888; font-size: 12px; }
-    .mono { font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", monospace; }
-    .badge { display:inline-block; padding:2px 8px; border-radius: 10px; font-size: 12px; }
-    .badge.admin { background:#e6f2ff; border:1px solid #b7d9f5; }
-    .badge.user { background:#f0f0f0; border:1px solid #dcdcdc; }
-    .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
-    button, .btn { cursor:pointer; padding:4px 8px; border:1px solid #ddd; background:#fff; border-radius:6px; }
-    button:hover, .btn:hover { background:#f2f2f2; }
-    .btn-up, .btn-down { width:32px; text-align:center; }
-  </style>
+  <jsp:useBean id="now" class="java.util.Date" />
+  <fmt:formatDate value="${now}" pattern="yyyyMMddHHmmss" var="cssVer" />
+  <link rel="stylesheet" href="<c:url value='/assets/admin/css/member.css'/>?v=${cssVer}">
 </head>
 <body>
 <%@ include file="/WEB-INF/jsp/admin/_layout/header.jspf" %>
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <div class="page-header">
     <h2>회원 관리</h2>
     <a href="${pageContext.request.contextPath}/" class="btn" target="_blank" title="새 탭에서 열기">사용자 홈으로</a>
   </div>
@@ -50,13 +36,13 @@
   <table>
     <thead>
       <tr>
-        <th style="width: 20%">아이디 (username)</th>
-        <th style="width: 15%">이름</th>
-        <th style="width:10%">권한</th>
+        <th class="col-username">아이디 (username)</th>
+        <th class="col-name">이름</th>
+        <th class="col-role">권한</th>
         <th>이메일</th>
-        <th style="width:15%">가입일</th>
-        <th style="width:12%">메뉴 권한</th>
-        <th style="width:15%">액션</th>
+        <th class="col-date">가입일</th>
+        <th class="col-menu">메뉴 권한</th>
+        <th class="col-action">액션</th>
       </tr>
     </thead>
     <tbody>
@@ -102,11 +88,11 @@
   </table>
 
   <!-- ====== 메뉴 권한 관리 모달 ====== -->
-  <div id="menuAuthModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;">
-    <div style="width:520px; max-width:calc(100% - 32px); background:#fff; border-radius:12px; margin:60px auto; padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-        <h3 style="margin:0; font-size:18px;">메뉴 권한 관리</h3>
-        <button type="button" onclick="closeMenuAuthModal()" style="border:none;background:transparent;font-size:20px;line-height:1;cursor:pointer;">×</button>
+  <div id="menuAuthModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">메뉴 권한 관리</h3>
+        <button type="button" onclick="closeMenuAuthModal()" class="modal-close-btn">×</button>
       </div>
 
       <div style="margin:6px 0 12px; color:#6b7280;">
@@ -117,18 +103,18 @@
       <form id="menuAuthForm" onsubmit="return submitMenuAuth(event)">
         <input type="hidden" id="auth-username" name="username" />
 
-        <div id="menu-tree-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 15px;">
+        <div id="menu-tree-container" class="menu-tree-container">
           <!-- 메뉴 트리(체크박스)가 여기에 동적으로 생성됩니다. -->
           <p class="muted">메뉴 목록을 불러오는 중...</p>
         </div>
 
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <div class="modal-footer">
           <button type="button" class="btn" onclick="closeMenuAuthModal()">취소</button>
           <button type="submit" class="btn btn-primary">권한 저장</button>
         </div>
       </form>
 
-      <div id="menuAuthAlert" style="display:none; margin-top:8px; color:#b91c1c;"></div>
+      <div id="menuAuthAlert" class="alert-msg"></div>
     </div>
   </div>
   <!-- ====== /메뉴 권한 관리 모달 ====== -->
@@ -184,7 +170,7 @@
     for (const node of nodes) {
       const isChecked = userPermissions.includes(node.code);
       const depth = node.depth || 0;
-      html += '<div style="margin-left: ' + (depth * 20) + 'px; margin-bottom: 4px;"><label><input type="checkbox" name="menu-permission" value="' + node.code + '" ' + (isChecked ? 'checked' : '') + '> ' + node.name + ' (<code class="mono" style="font-size:11px;">' + node.code + '</code>)</label></div>';
+      html += '<div class="menu-item" style="margin-left: ' + (depth * 20) + 'px;"><label><input type="checkbox" name="menu-permission" value="' + node.code + '" ' + (isChecked ? 'checked' : '') + '> ' + node.name + ' (<code class="mono" style="font-size:11px;">' + node.code + '</code>)</label></div>';
     }
     return html;
   }
