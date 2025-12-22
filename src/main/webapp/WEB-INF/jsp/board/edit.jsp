@@ -12,7 +12,8 @@
 
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/common.css'/>">
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/xeicon.min.css'/>">
-	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">  
+	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">
+	<link rel="stylesheet" href="<c:url value='/assets/common/css/board.css'/>">
     
 	<script type="text/javascript" src="<c:url value='/assets/common/js/jquery-3.7.1.min.js'/>"></script>
 	<%-- 스마트에디터 스크립트 추가 --%>
@@ -20,45 +21,6 @@
 
 	<script type="text/javascript" src="<c:url value='/assets/common/js/common.js'/>"></script>
 
-    <style>
-        .edit-form {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input[type="text"],
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-actions {
-            text-align: right;
-            margin-top: 20px;
-        }
-        .file-input-group, .existing-file {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .file-input-group input, .existing-file span {
-            flex-grow: 1;
-        }
-        .file-input-group button, .existing-file button {
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
-    </style>
 </head>
 <body>
 <div id="wrap">
@@ -90,6 +52,9 @@
                 <div id="file-container">
                     <!-- 새 파일 입력 필드가 여기에 추가됩니다. -->
                 </div>
+                 <%-- 숨겨진 이미지 업로드용 input --%>
+                <input type="file" id="image-uploader-input" style="display:none;" accept="image/*"/>
+                <!-- <button type="button" id="add-image-btn" class="btn" style="margin-top: 5px;">본문 이미지 추가</button> -->
                 <button type="button" id="add-file-btn" class="btn" style="margin-top: 5px;">파일 추가</button>
             </div>
             <div class="form-actions">
@@ -116,7 +81,17 @@
 				bUseVerticalResizer : true,
 				bUseModeChanger : true,
 				fOnBeforeUnload : function(){}
-			}, 
+			},
+			/* fOnAppLoad : function(){
+				// '사진' 버튼 클릭 시, 우리가 만든 팝업창을 띄웁니다.
+				oEditors.getById["content"].exec("ADD_APP_PROPERTY", [
+					"photo_uploader", 
+					function(){
+						var sUrl = "<c:url value='/assets/smarteditor2/popup/photo_uploader.jsp'/>";
+						oEditors.getById["content"].exec("SE_TOGGLE_IMAGE_URL_LAYER", [sUrl]);
+					}
+				]);
+			},  */
 			fCreator: "createSEditor2"
 		});
 
@@ -138,6 +113,41 @@
             $('#editForm').append('<input type="hidden" name="deleteFileIds" value="' + fileId + '">');
             // 화면에서 해당 파일 항목을 숨김
             $('#file-' + fileId).hide();
+        });
+
+        // '본문 이미지 추가' 버튼 클릭 이벤트
+        $('#add-image-btn').click(function() {
+            // 숨겨진 파일 input을 클릭합니다.
+            $('#image-uploader-input').click();
+        });
+
+        // 숨겨진 파일 input의 내용이 변경되었을 때 (파일이 선택되었을 때)
+        $('#image-uploader-input').on('change', function() {
+            var file = this.files[0];
+            if (!file) {
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('upload', file);
+
+            // AJAX를 통해 서버로 이미지 전송
+            $.ajax({
+                url: '<c:url value="/board/imageUpload"/>',
+                type: 'POST',
+                data: formData,
+                processData: false, // FormData를 사용할 때는 필수
+                contentType: false, // FormData를 사용할 때는 필수
+                success: function(response) {
+                    // 서버로부터 받은 이미지 URL을 에디터에 삽입
+                    var imageUrl = JSON.parse(response).url;
+                    var imgTag = "<img src='" + imageUrl + "' style='max-width:100%;'>";
+                    oEditors.getById["content"].exec("PASTE_HTML", [imgTag]);
+                },
+                error: function() {
+                    alert('이미지 업로드에 실패했습니다.');
+                }
+            });
         });
 
 		// 폼 제출 이벤트 핸들러

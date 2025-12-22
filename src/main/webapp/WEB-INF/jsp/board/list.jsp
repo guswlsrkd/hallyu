@@ -16,64 +16,11 @@
 
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/common.css'/>">
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/xeicon.min.css'/>">
-	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">  
+	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">
+	<link rel="stylesheet" href="<c:url value='/assets/common/css/board.css'/>">
     
 	<script type="text/javascript" src="<c:url value='/assets/common/js/jquery-3.7.1.min.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/assets/common/js/common.js'/>"></script>
-	<style>
-		/* 게시판 테이블 스타일 */
-		.board-table {
-			width: 100%;
-			border-collapse: collapse;
-			margin-top: 20px;
-			font-size: 14px;
-			color: #333;
-			table-layout: fixed; /* 테이블 너비를 고정하여 레이아웃 안정성 확보 */
-		}
-		.board-table th, .board-table td {
-			padding: 12px 10px;
-			text-align: center;
-			border-bottom: 1px solid #e9ecef;
-		}
-		.board-table th {
-			background-color: #f8f9fa;
-			border-top: 2px solid #333;
-			font-weight: 600;
-		}
-		/* 컬럼별 너비 지정 */
-		.board-table th:nth-child(1) { width: 8%; } /* ID */
-		.board-table th:nth-child(2) { width: auto; } /* 제목 */
-		.board-table th:nth-child(3) { width: 12%; } /* 작성자 */
-		.board-table th:nth-child(4) { width: 15%; } /* 등록일 */
-		.board-table th:nth-child(5) { width: 10%; } /* 조회수 */
-
-		.board-table td:nth-child(2) {
-			text-align: left;
-			/* 긴 제목은 ...으로 표시 */
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-		.board-table a {
-			text-decoration: none;
-			color: #333;
-		}
-		.board-table a:hover {
-			text-decoration: underline;
-		}
-		.board-table tr:hover {
-			background-color: #f5f5f5;
-		}
-
-		/* 페이지네이션 스타일 */
-		.pagination {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			margin-top: 30px;
-			gap: 10px;
-		}
-	</style>
 </head>
 <body>
 <nav class="skip">

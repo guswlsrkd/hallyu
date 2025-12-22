@@ -14,62 +14,12 @@
 
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/common.css'/>">
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/xeicon.min.css'/>">
-	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">  
+	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">
+	<link rel="stylesheet" href="<c:url value='/assets/common/css/board.css'/>">
     
 	<script type="text/javascript" src="<c:url value='/assets/common/js/jquery-3.7.1.min.js'/>"></script>
 	<script type="text/javascript" src="<c:url value='/assets/common/js/common.js'/>"></script>
 
-    <style>
-        .post-view {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .post-header {
-            border-bottom: 2px solid #333;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        .post-header h2 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .post-meta {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #666;
-        }
-        .post-meta span {
-            margin-right: 15px;
-        }
-        .post-content {
-            padding: 20px 0;
-            min-height: 300px;
-            line-height: 1.8;
-            border-bottom: 1px solid #eee;
-        }
-        .post-actions {
-            display: flex;
-            justify-content: flex-end; /* 버튼들을 오른쪽으로 정렬 */
-            gap: 8px; /* 버튼들 사이의 간격 */
-            margin-top: 20px;
-        }
-         .post-attachments { padding: 15px 0; border-bottom: 1px solid #eee; }
-        .post-attachments h4 { margin: 0 0 10px 0; font-size: 16px; }
-        .post-attachments ul { list-style: none; margin: 0; padding: 0; }
-        .post-attachments li { margin-bottom: 5px; }
-        .post-attachments li a { text-decoration: none; color: #007bff; }
-        .post-attachments li a:hover { text-decoration: underline; }
-        .post-attachments .file-size { font-size: 12px; color: #888; margin-left: 5px; }
-        .post-attachments i { margin-right: 5px; }
-        .comments-area { padding: 20px 0; margin-top: 20px; border-top: 1px solid #eee; }
-        .comments-area h3 { margin: 0 0 15px 0; font-size: 18px; }
-        .comment { border-bottom: 1px solid #eee; padding: 15px 0; }
-        .comment-meta { font-size: 13px; color: #666; margin-bottom: 5px; }
-        .reply { margin-left: 40px; border-left: 2px solid #ddd; padding-left: 15px; }
-        .reply-form { display: none; margin-top: 10px; }
-        .comment-form textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-    </style>
 </head>
 <body>
 <div id="wrap">

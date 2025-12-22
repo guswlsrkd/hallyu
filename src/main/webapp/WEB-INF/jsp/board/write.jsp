@@ -13,7 +13,8 @@
 
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/common.css'/>">
 	<link rel="stylesheet" href="<c:url value='/assets/common/css/xeicon.min.css'/>">
-	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">  
+	<link rel="stylesheet" href="http://cdn.jsdelivr.net/npm/xeicon@2.3.3/xeicon.min.css">
+	<link rel="stylesheet" href="<c:url value='/assets/common/css/board.css'/>">
     
 	<script type="text/javascript" src="<c:url value='/assets/common/js/jquery-3.7.1.min.js'/>"></script>
 	<%-- 스마트에디터 스크립트 추가 --%>
@@ -21,49 +22,6 @@
 
 	<script type="text/javascript" src="<c:url value='/assets/common/js/common.js'/>"></script>
 
-    <style>
-        .write-form {
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input[type="text"],
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .form-group textarea {
-            /* height: 300px; 스마트에디터가 높이를 제어하므로 불필요 */
-            resize: vertical;
-        }
-        .form-actions {
-            text-align: right;
-            margin-top: 20px;
-        }
-        .file-input-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        .file-input-group input {
-            flex-grow: 1;
-        }
-        .file-input-group button {
-            margin-left: 8px;
-            flex-shrink: 0;
-        }
-    </style>
 </head>
 <body>
 <div id="wrap">

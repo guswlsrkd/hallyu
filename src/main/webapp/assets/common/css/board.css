@@ -1,0 +1,147 @@
+/* === From list.jsp === */
+/* 게시판 테이블 스타일 */
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #333;
+    table-layout: fixed; /* 테이블 너비를 고정하여 레이아웃 안정성 확보 */
+}
+.board-table th, .board-table td {
+    padding: 12px 10px;
+    text-align: center;
+    border-bottom: 1px solid #e9ecef;
+}
+.board-table th {
+    background-color: #f8f9fa;
+    border-top: 2px solid #333;
+    font-weight: 600;
+}
+/* 컬럼별 너비 지정 */
+.board-table th:nth-child(1) { width: 8%; } /* ID */
+.board-table th:nth-child(2) { width: auto; } /* 제목 */
+.board-table th:nth-child(3) { width: 12%; } /* 작성자 */
+.board-table th:nth-child(4) { width: 15%; } /* 등록일 */
+.board-table th:nth-child(5) { width: 10%; } /* 조회수 */
+
+.board-table td:nth-child(2) {
+    text-align: left;
+    /* 긴 제목은 ...으로 표시 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.board-table a {
+    text-decoration: none;
+    color: #333;
+}
+.board-table a:hover {
+    text-decoration: underline;
+}
+.board-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* 페이지네이션 스타일 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    gap: 10px;
+}
+
+/* === From view.jsp === */
+.post-view {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.post-header {
+    border-bottom: 2px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.post-header h2 {
+    margin: 0;
+    font-size: 24px;
+}
+.post-meta {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+.post-meta span {
+    margin-right: 15px;
+}
+.post-content {
+    padding: 20px 0;
+    min-height: 300px;
+    line-height: 1.8;
+    border-bottom: 1px solid #eee;
+}
+.post-actions {
+    display: flex;
+    justify-content: flex-end; /* 버튼들을 오른쪽으로 정렬 */
+    gap: 8px; /* 버튼들 사이의 간격 */
+    margin-top: 20px;
+}
+ .post-attachments { padding: 15px 0; border-bottom: 1px solid #eee; }
+.post-attachments h4 { margin: 0 0 10px 0; font-size: 16px; }
+.post-attachments ul { list-style: none; margin: 0; padding: 0; }
+.post-attachments li { margin-bottom: 5px; }
+.post-attachments li a { text-decoration: none; color: #007bff; }
+.post-attachments li a:hover { text-decoration: underline; }
+.post-attachments .file-size { font-size: 12px; color: #888; margin-left: 5px; }
+.post-attachments i { margin-right: 5px; }
+.comments-area { padding: 20px 0; margin-top: 20px; border-top: 1px solid #eee; }
+.comments-area h3 { margin: 0 0 15px 0; font-size: 18px; }
+.comment { border-bottom: 1px solid #eee; padding: 15px 0; }
+.comment-meta { font-size: 13px; color: #666; margin-bottom: 5px; }
+.reply { margin-left: 40px; border-left: 2px solid #ddd; padding-left: 15px; }
+.reply-form { display: none; margin-top: 10px; }
+.comment-form textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+
+/* === From write.jsp & edit.jsp (merged) === */
+.write-form, .edit-form {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.form-group input[type="text"],
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+/* 스마트에디터가 높이를 제어하므로 불필요할 수 있으나, 일반 textarea를 위해 남겨둠 */
+.form-group textarea {
+    resize: vertical;
+}
+.form-actions {
+    text-align: right;
+    margin-top: 20px;
+}
+.file-input-group, .existing-file {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+.file-input-group input, .existing-file span {
+    flex-grow: 1;
+}
+.file-input-group button, .existing-file button {
+    margin-left: 8px;
+    flex-shrink: 0;
+}
